@@ -19,19 +19,19 @@ def get_pokemon_evo(id):
     response = requests.get(url)
 
     if response.status_code == 200:
-        pokemon_data = response.json()
-        return pokemon_data
+        pokemon_evo = response.json()
+        return pokemon_evo
     else:
         print(f"Failed to retrieve data {response.status_code}")
 
-def get_all_pokemon_info(name):
+def get_all_pokemon_info():
     url = f"{base_url}/pokemon/{name}"
     requests.get(url)
     response = requests.get(url)
 
     if response.status_code == 200:
-        pokemon_data = response.json()
-        return pokemon_data
+        all_pokemon_data = response.json()
+        return all_pokemon_data
     else:
         print(f"Failed to retrieve data {response.status_code}")
 
@@ -41,8 +41,8 @@ def get_pokemon_gen(gen):
     response = requests.get(url)
 
     if response.status_code == 200:
-        pokemon_data = response.json()
-        return pokemon_data
+        gen_data = response.json()
+        return gen_data
     else:
         print(f"Failed to retrieve data {response.status_code}")
 
