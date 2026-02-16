@@ -11,7 +11,6 @@ import json
 def main():
     pokemon_name = "Pikachu"
     pokemon_info = get_pokemon_info(pokemon_name)
-    print(f"{pokemon_info['id']} is this showing id??")
     evo_data = get_pokemon_evo(pokemon_info["id"])
     my_pokemon = Pokemon(pokemon_info, evo_data)
     my_pokemon.display_info()
