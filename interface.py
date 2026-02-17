@@ -6,7 +6,7 @@ def get_user_input():
     pokemon = input("Enter name of Pokemon: ")
     while is_running:
         #Prompting user for generation input
-        gen = input("Enter generation of Pokemon (1-19): ")
+        gen = int(input("Enter generation of Pokemon (1-19): "))
 
         #Validating user input
         if gen > 0 and gen < 20:

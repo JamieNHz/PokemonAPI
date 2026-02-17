@@ -14,7 +14,7 @@ def main():
     #Getting input from user around pokemon and generation of pokemon
     pokemon, gen = get_user_input()
     #Retrieving Pokemon Info
-    pokemon_info = get_pokemon_info(pokemon_name)
+    pokemon_info = get_pokemon_info(pokemon)
     #Retrieving evolution data for pokemon
     evo_data = get_pokemon_evo(pokemon_info["id"])
     #Building pokemon object
