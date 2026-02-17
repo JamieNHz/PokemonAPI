@@ -6,9 +6,6 @@ from pokemon_api import (
 from interface import get_user_input
 
 from models import Pokemon
-import pprint
-import json
-# In the output include the evolutions and the level they happen at. Maybe even an item if an item is required?
 
 def main():
     #Getting input from user around pokemon and generation of pokemon
