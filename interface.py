@@ -14,3 +14,4 @@ def get_user_input():
         else:
             print("Please enter a valid input ranging from 1-19")
 
+    return pokemon, gen
