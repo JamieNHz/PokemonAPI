@@ -17,7 +17,7 @@ def get_user_input(all_gen):
         #Removing one so it's able
         choice-=1
         #Validating user input
-        if choice > -1 and choice < 31:
+        if choice > -1 and choice < len(all_gen):
             is_running = False
             #Assigning the choice to the gen variable to pass back
             gen = all_gen[choice]

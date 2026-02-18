@@ -43,10 +43,14 @@ def main():
                 my_pokemon.display_info()
             else:
                 print("Invalid Pokemon")
+                option = input("Enter q to quit: ")
         else:
             print("Invalid Pokemon")
-    #Building pokemon object
-    
+            option = input("Enter q to quit: ")
+
+        if option == quit:
+            break
+        
 
 if __name__ == "__main__":
     main()
