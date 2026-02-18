@@ -12,7 +12,7 @@ def get_user_input(all_gen):
 
             i+=1
         #Prompting user for generation input
-        choice = int(input("Enter generation of Pokemon (1-19): "))
+        choice = int(input("Enter generation of Pokemon from selection: "))
 
         #Removing one so it's able
         choice-=1
