@@ -21,8 +21,6 @@ def get_user_input(all_gen):
             is_running = False
             #Assigning the choice to the gen variable to pass back
             gen = all_gen[choice]
-
-            print(gen)
             
         else:
             print("Please enter a valid input ranging from 1-19")

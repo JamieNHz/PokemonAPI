@@ -8,6 +8,8 @@ from interface import get_user_input
 
 from models import Pokemon
 
+import pprint
+
 def main():
     pokemon_info = []
     #Calling get pokemon gen function to collect all available generations
@@ -25,14 +27,25 @@ def main():
         pokemon_info = get_pokemon_info(pokemon)
 
         if pokemon_info:
-            #Retrieving evolution data for pokemon
-            evo_data = get_pokemon_evo(pokemon_info["id"])
+            #Looping within the moves objects within the pokemon object
+            for p in pokemon_info["moves"]:
+                #As there is multiple version group details, doing another loop to dig deeper
+                for d in p["version_group_details"]:
+                    #Finally able to get the name of each gen, checking if chosen gen exists within pokemon object
+                    if gen == d["version_group"]["name"]:
+                        pok_exists = True
+            if pok_exists:
+                #Retrieving evolution data for pokemon
+                evo_data = get_pokemon_evo(pokemon_info["id"])
+                my_pokemon = Pokemon(pokemon_info, evo_data, gen)
+                #Displaying Pokemon
+                my_pokemon.display_info()
+            else:
+                print("Invalid Pokemon")
         else:
             print("Invalid Pokemon")
     #Building pokemon object
-    my_pokemon = Pokemon(pokemon_info, evo_data)
-    #Displaying Pokemon
-    my_pokemon.display_info()
+    
 
 if __name__ == "__main__":
     main()

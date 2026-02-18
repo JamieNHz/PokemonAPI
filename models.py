@@ -1,8 +1,9 @@
 class Pokemon:
-    def __init__(self, data, evo_data):
+    def __init__(self, data, evo_data, gen):
         # 1. Basic Info
         self.name = data["name"].capitalize()
         self.id = data["id"]
+        self.gen = gen
         
         # 2. Extract Types (into a simple list of strings)
         self.types = [t["type"]["name"] for t in data["types"]]
@@ -45,7 +46,7 @@ class Pokemon:
         for m in data["moves"]:
             for detail in m["version_group_details"]:
                 if (detail["move_learn_method"]["name"] == "level-up" and 
-                    detail["version_group"]["name"] == "emerald" and
+                    detail["version_group"]["name"] == gen and
                     detail["level_learned_at"] > 2):
                     self.moves.append({
                         "name": m["move"]["name"],
@@ -64,7 +65,7 @@ class Pokemon:
         print(f"Evolutions: { ' -> ' .join(self.evolution_line)}")
         print(f"Abilities: {', '.join(self.abilities).title()}")
         print("-" * 30)
-        print("Moves (Red/Blue Level-up):")
+        print(f"Moves ({self.gen} Level-up):")
         for move in self.moves:
             print(f" Lvl {move['level']:>2} - {move['name'].title()}")
         print(f"{'='*30}\n")
