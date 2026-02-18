@@ -48,7 +48,7 @@ def main():
             print("Invalid Pokemon")
             option = input("Enter q to quit: ")
 
-        if option == quit:
+        if option == "q":
             break
         
 
