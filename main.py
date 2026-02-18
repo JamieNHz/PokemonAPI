@@ -27,13 +27,13 @@ def main():
         pokemon_info = get_pokemon_info(pokemon)
 
         if pokemon_info:
-            #Looping within the moves objects within the pokemon object
-            for p in pokemon_info["moves"]:
-                #As there is multiple version group details, doing another loop to dig deeper
-                for d in p["version_group_details"]:
-                    #Finally able to get the name of each gen, checking if chosen gen exists within pokemon object
-                    if gen == d["version_group"]["name"]:
-                        pok_exists = True
+            pok_exists = any(
+                group["version_group"]["name"] == gen
+                for move in pokemon_info["moves"]
+                for group in move["version_group_details"]
+                )
+
+            
             if pok_exists:
                 #Retrieving evolution data for pokemon
                 evo_data = get_pokemon_evo(pokemon_info["id"])
