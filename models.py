@@ -47,7 +47,7 @@ class Pokemon:
             for detail in m["version_group_details"]:
                 if (detail["move_learn_method"]["name"] == "level-up" and 
                     detail["version_group"]["name"] == gen and
-                    detail["level_learned_at"] > 2):
+                    detail["level_learned_at"] > 1):
                     self.moves.append({
                         "name": m["move"]["name"],
                         "level": detail["level_learned_at"]

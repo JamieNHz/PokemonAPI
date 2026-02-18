@@ -12,15 +12,16 @@ def get_pokemon_info(name):
     else:
         print(f"Failed to retrieve data {response.status_code}")
 
-def get_pokemon_evo(id):
-    url = f"{base_url}/evolution-chain/{id}"
-    response = requests.get(url)
+def get_pokemon_evo(url):
+    species_request = requests.get(url)
 
-    if response.status_code == 200:
-        pokemon_evo = response.json()
+    if species_request.status_code == 200:
+        evo_id = species_request.json()
+        evo_response = requests.get(evo_id["evolution_chain"]["url"])
+        pokemon_evo = evo_response.json()
         return pokemon_evo
     else:
-        print(f"Failed to retrieve data {response.status_code}")
+        print(f"Failed to retrieve data {species_request.status_code}")
 
 def get_all_pokemon_info():
     url = f"{base_url}/pokemon/{name}"

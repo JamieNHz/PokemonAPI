@@ -27,6 +27,7 @@ def main():
         pokemon_info = get_pokemon_info(pokemon)
 
         if pokemon_info:
+            #Using any iteration to look through object and see if the generation chosen exists within pokemon object
             pok_exists = any(
                 group["version_group"]["name"] == gen
                 for move in pokemon_info["moves"]
@@ -35,8 +36,8 @@ def main():
 
             
             if pok_exists:
-                #Retrieving evolution data for pokemon
-                evo_data = get_pokemon_evo(pokemon_info["id"])
+                #Retrieving evolution data for pokemon - Passing in URL for species in order to retrieve the correct evo tree
+                evo_data = get_pokemon_evo(pokemon_info["species"]["url"])
                 my_pokemon = Pokemon(pokemon_info, evo_data, gen)
                 #Displaying Pokemon
                 my_pokemon.display_info()
