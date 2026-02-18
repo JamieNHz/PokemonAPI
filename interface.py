@@ -1,17 +1,31 @@
 #Input functions
 
-def get_user_input():
+def get_user_input(all_gen):
     is_running = True
     #Prompting user for pokemon input
     pokemon = input("Enter name of Pokemon: ")
+    i = 1
     while is_running:
-        #Prompting user for generation input
-        gen = int(input("Enter generation of Pokemon (1-19): "))
+        #Looping round all items in dictionary in order to print out all available generations for user to pick
+        for g in all_gen:
+            print(f"{i}: {g}")
 
+            i+=1
+        #Prompting user for generation input
+        choice = int(input("Enter generation of Pokemon (1-19): "))
+
+        #Removing one so it's able
+        choice-=1
         #Validating user input
-        if gen > 0 and gen < 20:
+        if choice > -1 and choice < 31:
             is_running = False
+            #Assigning the choice to the gen variable to pass back
+            gen = all_gen[choice]
+
+            print(gen)
+            
         else:
             print("Please enter a valid input ranging from 1-19")
 
+    #returning chosen pokemona and pokemon gen
     return pokemon, gen

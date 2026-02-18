@@ -35,7 +35,7 @@ def get_all_pokemon_info():
     else:
         print(f"Failed to retrieve data {response.status_code}")
 
-def get_pokemon_gen(gen):
+def get_pokemon_gen():
     url = "https://pokeapi.co/api/v2/version-group/?limit=20"
     all_groups = [] # This is where we will store every result
 
@@ -51,5 +51,7 @@ def get_pokemon_gen(gen):
         
         print(f"Fetched {len(all_groups)} groups so far...")
 
-    return all_groups
+    version_dict = {group["name"]: group["url"] for group in all_groups}
+
+    return version_dict
 
