@@ -4,7 +4,6 @@ base_url = "https://pokeapi.co/api/v2/"
 
 def get_pokemon_info(name):
     url = f"{base_url}/pokemon/{name}"
-    requests.get(url)
     response = requests.get(url)
 
     if response.status_code == 200:
@@ -15,7 +14,6 @@ def get_pokemon_info(name):
 
 def get_pokemon_evo(id):
     url = f"{base_url}/evolution-chain/{id}"
-    requests.get(url)
     response = requests.get(url)
 
     if response.status_code == 200:
@@ -26,7 +24,6 @@ def get_pokemon_evo(id):
 
 def get_all_pokemon_info():
     url = f"{base_url}/pokemon/{name}"
-    requests.get(url)
     response = requests.get(url)
 
     if response.status_code == 200:
@@ -36,7 +33,7 @@ def get_all_pokemon_info():
         print(f"Failed to retrieve data {response.status_code}")
 
 def get_pokemon_gen():
-    url = "https://pokeapi.co/api/v2/version-group/?limit=20"
+    url = f"{base_url}//version-group/?limit=20"
     all_groups = [] # This is where we will store every result
 
     while url:
