@@ -29,5 +29,10 @@ def get_gen_input(all_gen):
 def get_pokemon_input():
     #Prompting user for pokemon input
     pokemon = input("Enter name of Pokemon: ")
-
-    return pokemon
+    # Validating user input to ensure it's not empty and only contains letters
+    if not pokemon:
+        print("Please enter a valid Pokemon name")
+    elif not pokemon.isalpha():
+        print("Please enter a valid Pokemon name (letters only)")
+    else:
+        return pokemon
