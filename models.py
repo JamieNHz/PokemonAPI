@@ -69,3 +69,35 @@ class Pokemon:
         for move in self.moves:
             print(f" Lvl {move['level']:>2} - {move['name'].title()}")
         print(f"{'='*30}\n")
+
+class Team:
+    def __init__(self, name):
+          self.name = name
+          self.members = [] # List to hold all pokemon
+          self.max_size = 6
+    def add_pokemon(self, pokemon):
+         #adds a pokemon as long as team isn't full
+        if len(self.members) < self.max_size:
+              self.members.append(pokemon)
+              print(f"{pokemon} has been added to {self.name}")
+              return True
+        else:
+            print(f"{self.name} is already full, please remove, or swap an existing pokemon")
+            return False
+
+    def display_team(self):
+        #Displaying full team, including name, and pokemon type
+        print(f"\n{'='*30}")
+        print(f"🏆 {self.name.upper()} 🏆")
+        print(f"{'='*30}")
+
+        if not self.members:
+             print("Your team is currently empty")
+             return
+        
+        for i, pkmn in enumerate(self.members, 1):
+             print(f"{i}: {pkmn.name} | Type: {'/'.join(pkmn.types).title()}")
+        print(f"{'='*30}\n")
+
+
+     

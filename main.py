@@ -8,7 +8,7 @@ from pokemon_api import (
 from interface import get_user_input
 
 #Importing module function
-from models import Pokemon
+from models import Pokemon, Team
 
 import pprint
 
