@@ -21,6 +21,13 @@ def main():
     # Convert keys to a list, then grab index 0
     all_gen = list(all_gen_url.keys())
     gen = get_gen_input(all_gen)
+    while True:
+        team_name = input("Enter a name for your team: ")
+        confirm = input(f"Confirm team name '{team_name}'? (y/n): ").lower()
+        if confirm == 'y':
+            break
+    
+    my_team = Team(team_name) 
 
     #Validating pokemon name, checking if pokemon name has returned anything.
     while team_counter < 7:
