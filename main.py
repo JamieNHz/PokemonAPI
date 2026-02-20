@@ -53,7 +53,7 @@ def main():
                 evo_data = get_pokemon_evo(pokemon_info["species"]["url"])
                 #Creating pokemon object to hold all data and passing in generation for move filtering
                 my_pokemon = Pokemon(pokemon_info, evo_data, gen)
-                my_team.add_pokemon(my_pokemon.name)
+                my_team.add_pokemon(my_pokemon)
                 #Displaying Pokemon
                 my_pokemon.display_info()
                 team_counter += 1
