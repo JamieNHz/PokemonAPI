@@ -19,15 +19,16 @@ def main():
 
     # Convert keys to a list, then grab index 0
     all_gen = list(all_gen_url.keys())
-
+    gen = get_gen_input(all_gen)
 
     #Validating pokemon name, checking if pokemon name has returned anything.
     while not pokemon_info:
         #Getting input from user around pokemon and generation of pokemon
         pokemon = get_pokemon_input()
-        gen = get_gen_input(all_gen)
-        #Retrieving Pokemon Info
         pokemon_info = get_pokemon_info(pokemon)
+        
+        #Retrieving Pokemon Info
+        
 
         if pokemon_info:
             #Using any iteration to look through object and see if the generation chosen exists within pokemon object
