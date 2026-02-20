@@ -65,7 +65,7 @@ def main():
             print("Invalid Pokemon")
         # Prompting user to add another pokemon or quit
         option = input("Enter q to quit or any other key to continue adding: ").lower()
-        if option == "q":
+        if option == "q" or team_counter >= team_max_size:
             break
     #Displaying team
     my_team.display_team()
