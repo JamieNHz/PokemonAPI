@@ -1,11 +1,13 @@
+#Importing pokemon api functions
 from pokemon_api import (
     get_pokemon_info,
     get_pokemon_evo,
     get_pokemon_gen
 )
-
+#Importing interface function
 from interface import get_user_input
 
+#Importing module function
 from models import Pokemon
 
 import pprint
