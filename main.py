@@ -5,7 +5,7 @@ from pokemon_api import (
     get_pokemon_gen
 )
 #Importing interface function
-from interface import get_user_input
+from interface import get_gen_input, get_pokemon_input
 
 #Importing module function
 from models import Pokemon, Team
@@ -24,7 +24,8 @@ def main():
     #Validating pokemon name, checking if pokemon name has returned anything.
     while not pokemon_info:
         #Getting input from user around pokemon and generation of pokemon
-        pokemon, gen = get_user_input(all_gen)
+        pokemon = get_pokemon_input()
+        gen = get_gen_input(all_gen)
         #Retrieving Pokemon Info
         pokemon_info = get_pokemon_info(pokemon)
 

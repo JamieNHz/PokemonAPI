@@ -1,9 +1,6 @@
 #Input functions
 
-def get_user_input(all_gen):
-    is_running = True
-    #Prompting user for pokemon input
-    pokemon = input("Enter name of Pokemon: ")
+def get_gen_input(all_gen):
     i = 1
     while is_running:
         #Looping round all items in dictionary in order to print out all available generations for user to pick
@@ -27,3 +24,9 @@ def get_user_input(all_gen):
 
     #returning chosen pokemona and pokemon gen
     return pokemon, gen
+
+def get_pokemon_input():
+    #Prompting user for pokemon input
+    pokemon = input("Enter name of Pokemon: ")
+
+    return pokemon
