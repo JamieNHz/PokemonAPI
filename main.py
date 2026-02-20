@@ -16,19 +16,20 @@ def main():
     pokemon_info = []
     #Calling get pokemon gen function to collect all available generations
     all_gen_url = get_pokemon_gen()
-
+    team_max_size = 6
+    team_counter = 0
     # Convert keys to a list, then grab index 0
     all_gen = list(all_gen_url.keys())
     gen = get_gen_input(all_gen)
 
     #Validating pokemon name, checking if pokemon name has returned anything.
-    while not pokemon_info:
-        #Getting input from user around pokemon and generation of pokemon
+    while team_counter < 7:
+        #Getting input for pokemon name
         pokemon = get_pokemon_input()
+        #Grabbing pokemon if exists
         pokemon_info = get_pokemon_info(pokemon)
         
-        #Retrieving Pokemon Info
-        
+        #Checking if the generation chosen exists within the pokemon object
 
         if pokemon_info:
             #Using any iteration to look through object and see if the generation chosen exists within pokemon object
@@ -45,6 +46,7 @@ def main():
                 my_pokemon = Pokemon(pokemon_info, evo_data, gen)
                 #Displaying Pokemon
                 my_pokemon.display_info()
+                team_counter += 1
             else:
                 print("Invalid Pokemon")
                 option = input("Enter q to quit: ")
