@@ -59,7 +59,7 @@ def main():
                 team_counter += 1
             else:
                 # If the pokemon doesn't exist in the generation chosen, prompt user to try again or quit
-                print("Invalid Pokemon")
+                print("Invalid Pokemon for the selected generation")
                 
         else:
             print("Invalid Pokemon")
