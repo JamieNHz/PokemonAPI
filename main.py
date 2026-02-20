@@ -51,7 +51,9 @@ def main():
             if pok_exists:
                 #Retrieving evolution data for pokemon - Passing in URL for species in order to retrieve the correct evo tree
                 evo_data = get_pokemon_evo(pokemon_info["species"]["url"])
+                #Creating pokemon object to hold all data and passing in generation for move filtering
                 my_pokemon = Pokemon(pokemon_info, evo_data, gen)
+                my_team.add_pokemon(my_pokemon.name)
                 #Displaying Pokemon
                 my_pokemon.display_info()
                 team_counter += 1
@@ -61,10 +63,12 @@ def main():
                 
         else:
             print("Invalid Pokemon")
-            
+        # Prompting user to add another pokemon or quit
         option = input("Enter q to quit or any other key to continue adding: ").lower()
         if option == "q":
             break
+    #Displaying team
+    my_team.display_team()
         
 
 if __name__ == "__main__":
