@@ -21,12 +21,13 @@ def main():
     # Convert keys to a list, then grab index 0
     all_gen = list(all_gen_url.keys())
     gen = get_gen_input(all_gen)
+    #Asking user for team name and confirming input
     while True:
         team_name = input("Enter a name for your team: ")
         confirm = input(f"Confirm team name '{team_name}'? (y/n): ").lower()
         if confirm == 'y':
             break
-    
+    #Creating team object to hold pokemon
     my_team = Team(team_name) 
 
     #Validating pokemon name, checking if pokemon name has returned anything.
@@ -55,12 +56,13 @@ def main():
                 my_pokemon.display_info()
                 team_counter += 1
             else:
+                # If the pokemon doesn't exist in the generation chosen, prompt user to try again or quit
                 print("Invalid Pokemon")
-                option = input("Enter q to quit: ")
+                
         else:
             print("Invalid Pokemon")
-            option = input("Enter q to quit: ")
-
+            
+        option = input("Enter q to quit or any other key to continue adding: ").lower()
         if option == "q":
             break
         
