@@ -36,3 +36,54 @@ def get_db_connection():
     
     print("Could not connect to SQL Server after multiple attempts. Please check your Docker setup and ensure the SQL Server container is running.")
     return None
+
+def intialize_db(conn):
+    # Create the database if it doesn't exist and set up the connection to use it
+    cursor = conn.cursor()
+    # We need to temporarily enable autocommit to create the database, then switch back to manual commit mode
+    conn.autocommit = True
+    cursor.execute("IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'PokemonDB') BEGIN CREATE DATABASE PokemonDB END")
+    # After creating the database, we can switch back to manual commit mode for our operations
+    conn.autocommit = False
+
+    # Now we can switch to using the new database for our operations
+    cursor.execute("USE PokemonDB")
+    # Create the Users table if it doesn't exist
+    cursor.execute("""
+        IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Users]') AND type in (N'U'))
+        BEGIN
+            CREATE TABLE Users (
+                UserID INT PRIMARY KEY IDENTITY(1,1),
+                Username NVARCHAR(50) UNIQUE NOT NULL,
+                PasswordHash VARBINARY(MAX) NOT NULL,
+                CreatedAt DATETIME DEFAULT GETDATE()
+            )
+        END
+    """)
+    
+    cursor.execute("""
+        IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Teams]') AND type in (N'U'))
+        BEGIN
+            CREATE TABLE Teams (
+                TeamID INT PRIMARY KEY IDENTITY(1,1),
+                UserID INT FOREIGN KEY REFERENCES Users(UserID) ON DELETE CASCADE,
+                TeamName NVARCHAR(100),
+                CreatedAt DATETIME DEFAULT GETDATE()
+            )
+        END
+    """)
+
+    cursor.execute("""
+        IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[TeamMembers]') AND type in (N'U'))
+        BEGIN
+            CREATE TABLE TeamMembers (
+                MemberID INT PRIMARY KEY IDENTITY(1,1),
+                TeamID INT FOREIGN KEY REFERENCES Teams(TeamID) ON DELETE CASCADE,
+                PokeApiID INT NOT NULL,
+                SlotNumber INT CHECK (SlotNumber BETWEEN 1 AND 6)
+            )
+        END
+    """)
+    # Commit the changes to the database and close the cursor
+    conn.commit()
+    cursor.close()
