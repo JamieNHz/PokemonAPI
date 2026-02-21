@@ -1,0 +1,37 @@
+services:
+  db:
+  # Using the official Microsoft SQL Server image for Linux
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: pokemon_sql_server
+    # Expose SQL Server's default port to the host machine
+    ports:
+      - "1433:1433"
+      # Set environment variables for SQL Server configuration
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${SQL_PASSWORD}
+    volumes:
+    # Mount a named volume to persist SQL Server data across container restarts
+      - sql_data:/var/opt/mssql # Persistent volume
+    networks:
+      - pokemon_net
+
+  app:
+  # Build the application image using the Dockerfile in the current directory
+    build: .
+    container_name: pokemon_app
+    depends_on:
+      - db
+    env_file:
+      - .env
+    stdin_open: true # These two lines allow your 
+    tty: true        # input() prompts to work in Docker
+    networks:
+      - pokemon_net
+
+networks:
+  pokemon_net:
+    driver: bridge
+
+volumes:
+  sql_data:
