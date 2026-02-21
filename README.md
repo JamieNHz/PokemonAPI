@@ -23,15 +23,15 @@ This project was built with a focus on **Separation of Concerns** and **Maintain
 This project is actively evolving from a standalone CLI tool into a fully containerized, production-ready microservice. Below is the phased implementation plan focusing on Site Reliability Engineering (SRE) and scalable architecture principles.
 
 ### Phase 1: Container Foundation
-- [ ] Add `Dockerfile` for the core Python application.
-- [ ] Create `docker-compose.yml` to orchestrate multi-container services.
-- [ ] Configure isolated container networking.
-- [ ] Implement persistent volumes for the SQL Server container.
-- [ ] Decouple configuration using environment variables (`.env`).
+- [x] Add `Dockerfile` for the core Python application.
+- [x] Create `docker-compose.yml` to orchestrate multi-container services.
+- [x] Configure isolated container networking.
+- [x] Implement persistent volumes for the SQL Server container.
+- [x] Decouple configuration using environment variables (`.env`).
 
 ### Phase 2: Database Layer
-- [ ] Design relational database schema (Users, Pokemon, UserPokemon).
-- [ ] Add automated migration or startup DB initialization scripts.
+- [x] Design relational database schema (Users, Pokemon, UserPokemon).
+- [x] Add automated migration or startup DB initialization scripts.
 - [ ] Implement a clean Repository Pattern layer for database access.
 
 ### Phase 3: Authentication & Security
