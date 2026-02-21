@@ -12,15 +12,17 @@ database = os.getenv("SQL_PASSWORD")
 def get_db_connection():
     # Pull credentials from the .env variables Docker provides
     connection_string = (
-        f"DRIVER={{ODBC Driver 17 for SQL Server}};"
+        f"DRIVER={{ODBC Driver 18 for SQL Server}};"
         f"SERVER={os.getenv('SQL_SERVER')};"
         f"DATABASE={os.getenv('SQL_DATABASE')};"
         f"UID={os.getenv('SQL_USER')};"
         f"PWD={os.getenv('SQL_PASSWORD')};"
+        "Encrypt=yes;" # Standard for Driver 18
+        "TrustServerCertificate=yes;" # This bypasses the error you see
     )
     # Implementing a retry mechanism to handle potential connection issues when the SQL Server container is still starting up
-    max_retries = 5
-    retry_delay = 5  # Seconds to wait between attempts
+    max_retries = 6
+    retry_delay = 10  # Seconds to wait between attempts
 
     for attempt in range(1, max_retries + 1):
         try:
