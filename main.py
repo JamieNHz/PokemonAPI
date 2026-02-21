@@ -10,6 +10,15 @@ from interface import get_gen_input, get_pokemon_input
 #Importing module function
 from models import Pokemon, Team
 
+import os
+from dotenv import load_dotenv
+# Load environment variables from .env file
+load_dotenv()
+
+# Retrieve database connection details from environment variables
+server = os.getenv("SQL_SERVER")
+database = os.getenv("SQL_PASSWORD")
+
 import pprint
 
 def main():
