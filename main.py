@@ -7,17 +7,12 @@ from pokemon_api import (
 #Importing interface function
 from interface import get_gen_input, get_pokemon_input
 
+from database import get_db_connection
+
 #Importing module function
 from models import Pokemon, Team
 
-import os
-from dotenv import load_dotenv
-# Load environment variables from .env file
-load_dotenv()
 
-# Retrieve database connection details from environment variables
-server = os.getenv("SQL_SERVER")
-database = os.getenv("SQL_PASSWORD")
 
 import pprint
 
@@ -81,4 +76,9 @@ def main():
         
 
 if __name__ == "__main__":
-    main()
+    Auth = get_db_connection()
+    if(Auth):
+        print("Database connection established successfully!")
+        main()
+    else:
+        print("Failed to connect to the database. Please check your Docker setup and ensure the SQL Server container is running.")
