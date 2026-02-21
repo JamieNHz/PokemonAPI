@@ -9,12 +9,12 @@ load_dotenv()
 server = os.getenv("SQL_SERVER")
 database = os.getenv("SQL_PASSWORD")
 
-def get_db_connection():
+def get_db_connection(target_db="master"):
     # Pull credentials from the .env variables Docker provides
     connection_string = (
         f"DRIVER={{ODBC Driver 18 for SQL Server}};"
         f"SERVER={os.getenv('SQL_SERVER')};"
-        f"DATABASE={os.getenv('SQL_DATABASE')};"
+        f"DATABASE={target_db};"
         f"UID={os.getenv('SQL_USER')};"
         f"PWD={os.getenv('SQL_PASSWORD')};"
         "Encrypt=yes;" # Standard for Driver 18
@@ -29,6 +29,7 @@ def get_db_connection():
             print(f"Connecting to SQL Server (Attempt {attempt}/{max_retries})...")
             conn = pyodbc.connect(connection_string)
             print("Successfully connected to SQL Server!")
+            intialize_db(conn)  # Ensure the database and tables are set up
             return conn
         except Exception as e:
             print(f"SQL Not ready yet: {e}")

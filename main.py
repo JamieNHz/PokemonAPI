@@ -7,7 +7,7 @@ from pokemon_api import (
 #Importing interface function
 from interface import get_gen_input, get_pokemon_input
 
-from database import get_db_connection
+from database import get_db_connection, intialize_db
 
 #Importing module function
 from models import Pokemon, Team
@@ -16,7 +16,7 @@ from models import Pokemon, Team
 
 import pprint
 
-def main():
+def main(db_conn):
     pokemon_info = []
     #Calling get pokemon gen function to collect all available generations
     all_gen_url = get_pokemon_gen()
@@ -76,9 +76,10 @@ def main():
         
 
 if __name__ == "__main__":
-    Auth = get_db_connection()
-    if(Auth):
+    db_conn = get_db_connection("master")
+    if(db_conn):
+        intialize_db(db_conn)  # Ensure the database and tables are set up
         print("Database connection established successfully!")
-        main()
+        main(db_conn)
     else:
         print("Failed to connect to the database. Please check your Docker setup and ensure the SQL Server container is running.")
