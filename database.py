@@ -127,6 +127,7 @@ class PokemonRepository:
 
     def get_team_by_user(self, userID):
         cursor = self.conn.cursor()
+        team_data = []
         try:
             cursor.execute("""
                 SELECT t.TeamID, t.TeamName, tm.PokeApiID, tm.SlotNumber
@@ -146,19 +147,29 @@ class PokemonRepository:
     def add_team(self, userID, team_object):
         cursor = self.conn.cursor()
         try:
-            cursor.execute("INSERT INTO Teams (UserID, TeamName) VALUES (?, ?)", (userID, team_object.name))
-            team_id = cursor.lastrowid
+            cursor.execute("""
+                INSERT INTO Teams (UserID, TeamName) 
+                OUTPUT INSERTED.TeamID 
+                VALUES (?, ?)
+            """, (userID, team_object.name))
+
+            team_id = cursor.fetchone()[0]  # Get the generated TeamID
+
             for idx, pokemon in enumerate(team_object.members):
-                cursor.execute("INSERT INTO TeamMembers (TeamID, PokeApiID, SlotNumber) VALUES (?, ?, ?)", (team_id, pokemon.id, idx + 1))
+                cursor.execute("""INSERT INTO TeamMembers (TeamID, PokeApiID, SlotNumber)
+                                VALUES (?, ?, ?)
+                               """, (team_id, pokemon.id, idx + 1))
+
+            
             self.conn.commit()
-            cursor.close()
+            
             print(f"Team '{team_object.name}' added successfully for user ID {userID}!")
         
         # In case of any error during the insertion process, we catch the exception, print an error message, and roll back the transaction to maintain database integrity
         except Exception as e:
             print(f"Error adding team to database: {e}")
             self.conn.rollback()
-            cursor.close()
+            
 
         finally:
             cursor.close()
