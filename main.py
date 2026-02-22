@@ -7,12 +7,10 @@ from pokemon_api import (
 #Importing interface function
 from interface import get_gen_input, get_pokemon_input
 
-from database import get_db_connection, intialize_db
+from database import get_db_connection, intialize_db, PokemonRepository
 
 #Importing module function
 from models import Pokemon, Team
-
-
 
 import pprint
 
@@ -82,8 +80,31 @@ if __name__ == "__main__":
         db_conn = get_db_connection("master")
         if db_conn:
             intialize_db(db_conn)  # Ensure the database and tables are set up
+            repo = PokemonRepository(db_conn)  # Create a repository instance for database operations
             print("Database connection established successfully!")
-            main(db_conn)
+            while True:
+                # Starting the main application logic
+                print("\nWelcome to the Pokemon Team Builder!")
+                print("1. Login")
+                print("2. Register")
+                choice = input("Select an option (1 or 2): ")
+                # Initialize user_id to None before the login/register process
+                user_id = None
+                if choice == "1":
+                    login_user(repo)
+                elif choice == "2":
+                    register_user(repo)
+                
+                if user_id:
+                    main(db_conn, user_id)  # Pass the database connection and user_id to the main function
+                    break  # Exit after the main function completes
+                else:
+                    exit_choice = input("Login or registration failed. Do you want to try again? (y/n): ").lower()
+                    if exit_choice != 'y':
+                        print("Exiting the application. Please try again later.")
+                        break
+                    else:
+                        print("Login or registration failed. Please try again.")
         else:
             print("Failed to establish a database connection. Please check your Docker setup and ensure the SQL Server container is running.")
     except Exception as e:
