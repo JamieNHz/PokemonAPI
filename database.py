@@ -29,7 +29,7 @@ def get_db_connection(target_db="master"):
             print(f"Connecting to SQL Server (Attempt {attempt}/{max_retries})...")
             conn = pyodbc.connect(connection_string)
             print("Successfully connected to SQL Server!")
-            intialize_db(conn)  # Ensure the database and tables are set up
+            
             return conn
         except Exception as e:
             print(f"SQL Not ready yet: {e}")
@@ -88,3 +88,25 @@ def intialize_db(conn):
     # Commit the changes to the database and close the cursor
     conn.commit()
     cursor.close()
+
+class PokemonRepository:
+    def __init__(self, conn):
+        self.conn = conn
+
+    def add_user(self, username, password_hash):
+        cursor = self.conn.cursor()
+        cursor.execute("INSERT INTO Users (Username, PasswordHash) VALUES (?, ?)", (username, password_hash))
+        self.conn.commit()
+        cursor.close()
+
+    def get_team_by_user(self, userID):
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            SELECT t.TeamID, t.TeamName, tm.PokeApiID, tm.SlotNumber
+            FROM Teams t
+            JOIN TeamMembers tm ON t.TeamID = tm.TeamID
+            WHERE t.UserID = ?
+        """, (userID,))
+        team_data = cursor.fetchall()
+        cursor.close()
+        return team_data
