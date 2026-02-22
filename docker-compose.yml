@@ -20,6 +20,8 @@ services:
   # Build the application image using the Dockerfile in the current directory
     build: .
     container_name: pokemon_app
+    stdin_open: true # These two lines allow your input() prompts to work in Docker
+    tty: true        # These two lines allow your input() prompts to work in Docker
     depends_on:
       - db
     env_file:

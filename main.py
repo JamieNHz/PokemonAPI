@@ -91,9 +91,9 @@ if __name__ == "__main__":
                 # Initialize user_id to None before the login/register process
                 user_id = None
                 if choice == "1":
-                    login_user(repo)
+                    user_id = login_user(repo)
                 elif choice == "2":
-                    register_user(repo)
+                    user_id = register_user(repo)
                 
                 if user_id:
                     main(db_conn, user_id)  # Pass the database connection and user_id to the main function
