@@ -99,9 +99,15 @@ class PokemonRepository:
     # Method to add a new user to the database
     def add_user(self, username, password_hash):
         cursor = self.conn.cursor()
-        cursor.execute("INSERT INTO Users (Username, PasswordHash) VALUES (?, ?)", (username, password_hash))
-        self.conn.commit()
-        cursor.close()
+        # We attempt to insert a new user into the Users table. If the username already exists or there's any other issue, we catch the exception, print an error message, and roll back the transaction to maintain database integrity. Finally, we ensure that the cursor is closed after the operation.
+        try:
+            cursor.execute("INSERT INTO Users (Username, PasswordHash) VALUES (?, ?)", (username, password_hash))
+            self.conn.commit()
+        except Exception as e:
+            print(f"Error adding user to database: {e}")
+            self.conn.rollback()
+        finally:
+            cursor.close()
 
      # Method to retrieve a user by their username (for authentication purposes)
     def get_user_by_username(self, username):
@@ -121,14 +127,18 @@ class PokemonRepository:
 
     def get_team_by_user(self, userID):
         cursor = self.conn.cursor()
-        cursor.execute("""
-            SELECT t.TeamID, t.TeamName, tm.PokeApiID, tm.SlotNumber
-            FROM Teams t
-            JOIN TeamMembers tm ON t.TeamID = tm.TeamID
-            WHERE t.UserID = ?
-        """, (userID,))
-        team_data = cursor.fetchall()
-        cursor.close()
+        try:
+            cursor.execute("""
+                SELECT t.TeamID, t.TeamName, tm.PokeApiID, tm.SlotNumber
+                FROM Teams t
+                JOIN TeamMembers tm ON t.TeamID = tm.TeamID
+                WHERE t.UserID = ?
+            """, (userID,))
+            team_data = cursor.fetchall()
+        except Exception as e:
+            print(f"Error retrieving team from database: {e}")
+        finally:
+            cursor.close()
         return team_data
     
     # Method to add a team to the database for a specific user
