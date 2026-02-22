@@ -32,10 +32,10 @@ This project is actively evolving from a standalone CLI tool into a fully contai
 ### Phase 2: Database Layer
 - [x] Design relational database schema (Users, Pokemon, UserPokemon).
 - [x] Add automated migration or startup DB initialization scripts.
-- [ ] Implement a clean Repository Pattern layer for database access.
+- [x] Implement a clean Repository Pattern layer for database access.
 
 ### Phase 3: Authentication & Security
-- [ ] Implement password hashing (bcrypt/argon2).
+- [x] Implement password hashing (bcrypt/argon2).
 - [ ] Create secure user registration and login endpoints.
 - [ ] Implement JWT generation and validation middleware.
 - [ ] Protect specific Pokémon data routes with required authentication.
