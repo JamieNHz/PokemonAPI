@@ -76,10 +76,19 @@ def main(db_conn):
         
 
 if __name__ == "__main__":
-    db_conn = get_db_connection("master")
-    if(db_conn):
-        intialize_db(db_conn)  # Ensure the database and tables are set up
-        print("Database connection established successfully!")
-        main(db_conn)
-    else:
-        print("Failed to connect to the database. Please check your Docker setup and ensure the SQL Server container is running.")
+    db_conn = None
+    # Implementing a retry mechanism to handle potential connection issues when the SQL Server container is still starting up
+    try:
+        db_conn = get_db_connection("master")
+        if db_conn:
+            intialize_db(db_conn)  # Ensure the database and tables are set up
+            print("Database connection established successfully!")
+            main(db_conn)
+        else:
+            print("Failed to establish a database connection. Please check your Docker setup and ensure the SQL Server container is running.")
+    except Exception as e:
+        print(f"Failed to connect to the database. Please check your Docker setup and ensure the SQL Server container is running. Error: {e}")
+    finally:
+        if db_conn:
+            db_conn.close()
+            print("Database connection closed.")
