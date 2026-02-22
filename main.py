@@ -14,7 +14,7 @@ from models import Pokemon, Team
 
 import pprint
 
-def main(db_conn):
+def main(db_conn, user_id):
     pokemon_info = []
     #Calling get pokemon gen function to collect all available generations
     all_gen_url = get_pokemon_gen()
