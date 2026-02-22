@@ -5,7 +5,7 @@ from pokemon_api import (
     get_pokemon_gen
 )
 #Importing interface function
-from interface import get_gen_input, get_pokemon_input
+from interface import get_gen_input, get_pokemon_input, login_user, register_user
 
 from database import get_db_connection, intialize_db, PokemonRepository
 
