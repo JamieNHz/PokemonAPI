@@ -90,14 +90,21 @@ def intialize_db(conn):
     cursor.close()
 
 class PokemonRepository:
+    # This class will handle all database interactions related to Pokemon teams and users
+
+    # Initialize the repository with a database connection
     def __init__(self, conn):
         self.conn = conn
-
+        
+    # Method to add a new user to the database
     def add_user(self, username, password_hash):
         cursor = self.conn.cursor()
         cursor.execute("INSERT INTO Users (Username, PasswordHash) VALUES (?, ?)", (username, password_hash))
         self.conn.commit()
         cursor.close()
+
+
+    # Method to retrieve a user's team from the database
 
     def get_team_by_user(self, userID):
         cursor = self.conn.cursor()
@@ -110,3 +117,26 @@ class PokemonRepository:
         team_data = cursor.fetchall()
         cursor.close()
         return team_data
+    
+    # Method to add a team to the database for a specific user
+    
+    def add_team(self, userID, team_object):
+        cursor = self.conn.cursor()
+        try:
+            cursor.execute("INSERT INTO Teams (UserID, TeamName) VALUES (?, ?)", (userID, team_object.name))
+            team_id = cursor.lastrowid
+            for idx, pokemon in enumerate(team_object.members):
+                cursor.execute("INSERT INTO TeamMembers (TeamID, PokeApiID, SlotNumber) VALUES (?, ?, ?)", (team_id, pokemon.id, idx + 1))
+            self.conn.commit()
+            cursor.close()
+            print(f"Team '{team_object.name}' added successfully for user ID {userID}!")
+        
+        except Exception as e:
+            print(f"Error adding team to database: {e}")
+            self.conn.rollback()
+            cursor.close()
+
+        finally:
+            cursor.close()
+
+    
