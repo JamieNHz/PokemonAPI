@@ -103,6 +103,19 @@ class PokemonRepository:
         self.conn.commit()
         cursor.close()
 
+     # Method to retrieve a user by their username (for authentication purposes)
+    def get_user_by_username(self, username):
+        cursor = self.conn.cursor()
+        try:
+            cursor.execute("SELECT UserID, Username, PasswordHash FROM Users WHERE Username = ?", (username,))
+            user_data = cursor.fetchone()
+        # If there's an error during the database query, we catch the exception, print an error message, and set user_data to None to indicate that the retrieval was unsuccessful
+        except Exception as e:
+            print(f"Error retrieving user from database: {e}")
+            user_data = None
+        finally:
+            cursor.close()
+        return user_data
 
     # Method to retrieve a user's team from the database
 
@@ -131,6 +144,7 @@ class PokemonRepository:
             cursor.close()
             print(f"Team '{team_object.name}' added successfully for user ID {userID}!")
         
+        # In case of any error during the insertion process, we catch the exception, print an error message, and roll back the transaction to maintain database integrity
         except Exception as e:
             print(f"Error adding team to database: {e}")
             self.conn.rollback()
@@ -138,5 +152,7 @@ class PokemonRepository:
 
         finally:
             cursor.close()
+
+   
 
     
