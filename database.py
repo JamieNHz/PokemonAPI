@@ -188,7 +188,7 @@ class PokemonRepository:
             return None # Return None if no team data is found for the user
         team_name = team_data[0][1] # Assuming all rows have the same team name
         team_gen = team_data[0][2] # Assuming all rows have the same generation
-        team = Team(team_name)
+        team = Team(team_name, team_gen)
         for row in team_data:
             # Each row contains: TeamID, TeamName, PokeApiID, SlotNumber
             poke_id = row[3]
@@ -196,7 +196,7 @@ class PokemonRepository:
             pokemon_evo = get_pokemon_evo(pokemon_info["species"]["url"])
             pokemon_obj = Pokemon(pokemon_info, pokemon_evo, team_gen)
             # We add the rehydrated Pokemon object to the team using the add_pokemon method, which will handle adding it to the members list and ensuring we don't exceed the maximum team size
-            team.add_pokemon(pokemon_obj)
+            team.add_pokemon(pokemon_obj, first_add=False)
         # After processing all rows, we return the fully rehydrated Team object, which now contains all the Pokemon members as actual objects with their data populated from the API
         return team
     

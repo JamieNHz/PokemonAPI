@@ -76,11 +76,12 @@ class Team:
           self.gen = gen
           self.members = [] # List to hold all pokemon in the team
           self.max_size = 6
-    def add_pokemon(self, pokemon):
+    def add_pokemon(self, pokemon, first_add=True):
          #adds a pokemon as long as team isn't full
         if len(self.members) < self.max_size:
               self.members.append(pokemon)
-              print(f"{pokemon} has been added to {self.name}")
+              if first_add:
+                print(f"{pokemon.name} has been added to {self.name}")
               return True
         else:
             print(f"{self.name} is already full, please remove, or swap an existing pokemon")
