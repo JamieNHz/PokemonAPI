@@ -71,7 +71,7 @@ def intialize_db(conn):
                 TeamID INT PRIMARY KEY IDENTITY(1,1),
                 UserID INT FOREIGN KEY REFERENCES Users(UserID) ON DELETE CASCADE,
                 TeamName NVARCHAR(100),
-                Generation INT,
+                Generation NVARCHAR(50),
                 CreatedAt DATETIME DEFAULT GETDATE()
             )
         END
@@ -130,10 +130,12 @@ class PokemonRepository:
 
     def get_team_by_user(self, userID):
         cursor = self.conn.cursor()
+
         team_data = []
+        rehydrated_team = [] # Initialize rehydrated_team to an empty list in case of errors or no team found
         try:
             cursor.execute("""
-                SELECT t.TeamID, t.TeamName, tm.PokeApiID, tm.SlotNumber
+                SELECT t.TeamID, t.TeamName, t.Generation, tm.PokeApiID, tm.SlotNumber
                 FROM Teams t
                 JOIN TeamMembers tm ON t.TeamID = tm.TeamID
                 WHERE t.UserID = ?

@@ -15,9 +15,11 @@ from models import Pokemon, Team
 import pprint
 
 def main(db_conn, repo, user_id):
-    checkTeam = PokemonRepository.get_team_by_user(repo, user_id)
-    if(checkTeam):
+    get_team = PokemonRepository.get_team_by_user(repo, user_id)
+    
+    if(get_team):
         print("You already have a team saved. Please delete your existing team before creating a new one.")
+        get_team.display_team()
     else:
         print("Let's build your Pokemon team!")
         pokemon_info = []
@@ -35,7 +37,7 @@ def main(db_conn, repo, user_id):
             if confirm == 'y':
                 break
         #Creating team object to hold pokemon
-        my_team = Team(team_name) 
+        my_team = Team(team_name, gen) 
 
         #Validating pokemon name, checking if pokemon name has returned anything.
         while team_counter < 7:
@@ -76,8 +78,9 @@ def main(db_conn, repo, user_id):
                 break
 
         repo.add_team(user_id, my_team)
+        my_team.display_team()
     #Displaying team
-    my_team.display_team()
+        
         
 
 if __name__ == "__main__":
