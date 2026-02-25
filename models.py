@@ -71,9 +71,10 @@ class Pokemon:
         print(f"{'='*30}\n")
 
 class Team:
-    def __init__(self, name):
+    def __init__(self, name, gen):
           self.name = name
-          self.members = [] # List to hold all pokemon
+          self.gen = gen
+          self.members = [] # List to hold all pokemon in the team
           self.max_size = 6
     def add_pokemon(self, pokemon):
          #adds a pokemon as long as team isn't full
@@ -89,6 +90,7 @@ class Team:
         #Displaying full team, including name, and pokemon type
         print(f"\n{'='*30}")
         print(f"🏆 {self.name.upper()} 🏆")
+        print(f"Generation: {self.gen}")
         print(f"{'='*30}")
 
         if not self.members:
