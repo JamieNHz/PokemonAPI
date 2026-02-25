@@ -1,6 +1,8 @@
 import pyodbc
 import time
 import os
+from models import Team, Pokemon
+from pokemon_api import get_pokemon_evo, get_pokemon_info
 from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
@@ -136,11 +138,13 @@ class PokemonRepository:
                 WHERE t.UserID = ?
             """, (userID,))
             team_data = cursor.fetchall()
+            if team_data:
+                rehydrated_team = self.rehydrate_team(team_data)
         except Exception as e:
             print(f"Error retrieving team from database: {e}")
         finally:
             cursor.close()
-        return team_data
+        return rehydrated_team
     
     # Method to add a team to the database for a specific user
     
@@ -175,5 +179,20 @@ class PokemonRepository:
             cursor.close()
 
    
-
+    def rehydrate_team(self, team_data):
+        # This function takes raw team data from the database and converts it back into a Team object
+        if not team_data:
+            return None # Return None if no team data is found for the user
+        team_name = team_data[0][1] # Assuming all rows have the same team name
+        team = Team(team_name)
+        for row in team_data:
+            # Each row contains: TeamID, TeamName, PokeApiID, SlotNumber
+            poke_id = row[2]
+            pokemon_info = get_pokemon_info(poke_id)
+            pokemon_evo = get_pokemon_evo(pokemon_info["species"]["url"])
+            pokemon_obj = Pokemon(pokemon_info, pokemon_evo, "red-blue")
+            # We add the rehydrated Pokemon object to the team using the add_pokemon method, which will handle adding it to the members list and ensuring we don't exceed the maximum team size
+            team.add_pokemon(pokemon_obj)
+        # After processing all rows, we return the fully rehydrated Team object, which now contains all the Pokemon members as actual objects with their data populated from the API
+        return team
     
