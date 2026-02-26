@@ -13,6 +13,25 @@ app = FastAPI(title="Pokemon Team Builder API")
 
 base_url = "https://pokeapi.co/api/v2/"
 
+@app.post("/register", status_code=status.HTTP_201_CREATED)
+def register_user(user: UserCredentials):
+    """Creates a new user in the SQL Database."""
+    
+    # 1. Check if user already exists (optional but good practice)
+    existing_user = repo.get_user_by_username(user.username)
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Username already taken")
+
+    # 2. Hash the password from the JSON payload
+    hashed_pw = hash_password(user.password)
+
+    # 3. Save to database
+    success = repo.add_user(user.username, hashed_pw)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to create user")
+
+    return {"message": f"User {user.username} successfully registered!"}
+
 def get_pokemon_info(name):
     url = f"{base_url}/pokemon/{name}"
     response = requests.get(url)
