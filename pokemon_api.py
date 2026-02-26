@@ -1,4 +1,15 @@
+# pokemon_api.py start
 import requests
+from fastapi import FastAPI, HTTPException, status
+from pydantic import BaseModel
+from database import PokemonRepository
+from auth import hash_password, verify_password
+import pyodbc
+from your_db_module import get_db_connection # Adjust import as needed
+db_conn = get_db_connection("master")
+repo = PokemonRepository(db_conn)
+
+app = FastAPI(title="Pokemon Team Builder API")
 
 base_url = "https://pokeapi.co/api/v2/"
 
@@ -42,4 +53,6 @@ def get_pokemon_gen():
     version_dict = {group["name"]: group["url"] for group in all_groups}
 
     return version_dict
+
+# pokemon_api.py ends here. The functions defined in this file are responsible for interacting with the PokeAPI to retrieve information about Pokemon, their evolutions, and the available generations. These functions will be used by other parts of the application, such as the main logic and database interactions, to build the functionality of the Pokemon team builder application.
 
