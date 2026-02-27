@@ -1,3 +1,4 @@
+# database.py start
 import pyodbc
 import time
 import os
@@ -106,9 +107,11 @@ class PokemonRepository:
         try:
             cursor.execute("INSERT INTO Users (Username, PasswordHash) VALUES (?, ?)", (username, password_hash))
             self.conn.commit()
+            return True
         except Exception as e:
             print(f"Error adding user to database: {e}")
             self.conn.rollback()
+            return False
         finally:
             cursor.close()
 
@@ -200,3 +203,4 @@ class PokemonRepository:
         # After processing all rows, we return the fully rehydrated Team object, which now contains all the Pokemon members as actual objects with their data populated from the API
         return team
     
+# 
