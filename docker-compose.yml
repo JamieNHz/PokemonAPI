@@ -31,6 +31,9 @@ services:
     # Command to run the FastAPI application using Uvicorn, with hot reload enabled for development
     command: uvicorn server:app --host 0.0.0.0 --port 8000 --reload
 
+    volumes:
+      - .:/app # Mount the current directory to /app in the container for development
+
     networks:
       - pokemon_net
 
