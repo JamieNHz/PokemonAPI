@@ -1,14 +1,57 @@
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, Depends
+from contextlib import asynccontextmanager
 from pydantic import BaseModel
-from database import PokemonRepository, get_db_connection
+from database import PokemonRepository, get_db_connection, intialize_db
 from auth import hash_password, verify_password
 
-app = FastAPI(title="Pokemon Team Builder API")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("🚀 Starting up the application. Establishing database connection...")
+    db_conn = None
+    try:
+        # 1. DO ALL SETUP BEFORE YIELDING
+        db_conn = get_db_connection("master")
+        intialize_db(db_conn) 
+        print("✅ Database initialized successfully!")
+    except Exception as e:
+        print(f"❌ Failed to connect to the database: {e}")
+        
+    # 2. PAUSE AND RUN THE SERVER
+    # (Everything above this line runs on startup. Everything below runs on shutdown)
+    yield   
+
+    # 3. TEARDOWN
+    print("🛑 Shutting down the application...")
+    if db_conn:
+        db_conn.close()
+        print("Database connection closed.")
+
+app = FastAPI(title="Pokemon Team Builder API", lifespan=lifespan)
+
+
+class UserCredentials(BaseModel):
+    username: str
+    password: str
+
+def get_repo():
+    """Dependency that creates a fresh database connection per request."""
+    conn = get_db_connection() # Or get_db_connection("master"), whatever you currently have
+    
+    # 👇 THE SILVER BULLET: Force this specific connection into the right room
+    cursor = conn.cursor()
+    cursor.execute("USE PokemonDB")
+    cursor.close()
+    
+    repo = PokemonRepository(conn)
+    try:
+        yield repo
+    finally:
+        conn.close()
 
 @app.post("/register", status_code=status.HTTP_201_CREATED)
-def register_user(user: UserCredentials):
+def register_user(user: UserCredentials, repo: PokemonRepository = Depends(get_repo)):
     """Creates a new user in the SQL Database."""
-    
+
     # 
     existing_user = repo.get_user_by_username(user.username)
     if existing_user:
@@ -25,9 +68,9 @@ def register_user(user: UserCredentials):
     return {"message": f"User {user.username} successfully registered!"}
 
 @app.post("/login")
-def login_user(user: UserCredentials):
+def login_user(user: UserCredentials, repo: PokemonRepository = Depends(get_repo)):
     """Verifies user credentials."""
-    
+
     # Retrieve user data from the database using the provided username
     user_data = repo.get_user_by_username(user.username)
     
@@ -46,3 +89,7 @@ def login_user(user: UserCredentials):
         "message": "Login successful!",
         "user_id": db_user_id
     }
+
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to the Pokemon Team Builder API! Go to /docs to test the endpoints."}
