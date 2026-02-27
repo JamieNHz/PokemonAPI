@@ -24,8 +24,13 @@ services:
       - db
     env_file:
       - .env
-    stdin_open: true # These two lines allow your 
-    tty: true        # input() prompts to work in Docker
+    # Expose the FastAPI app on port 8000
+    ports:
+      - "8000:8000" # Expose the FastAPI app on port 8000
+
+    # Command to run the FastAPI application using Uvicorn, with hot reload enabled for development
+    command: uvicorn server:app --host 0.0.0.0 --port 8000 --reload
+
     networks:
       - pokemon_net
 
