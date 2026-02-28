@@ -1,3 +1,4 @@
+#models.py start
 class Pokemon:
     def __init__(self, data, evo_data, gen):
         # 1. Basic Info
@@ -57,7 +58,7 @@ class Pokemon:
         self.moves.sort(key=lambda x: x["level"])
 
     def display_info(self):
-        """Prints a neat summary of the Pokemon"""
+        # This method prints out all the relevant information about the Pokemon in a nicely formatted way, including its name, ID, types, forms, evolution line, abilities, and level-up moves for the specified generation. The output is designed to be clear and visually appealing for users who want to see the details of their chosen Pokemon.
         print(f"\n{'='*30}")
         print(f"#{self.id:03} : {self.name}")
         print(f"Type: {' / '.join(self.types).title()}")
@@ -69,6 +70,18 @@ class Pokemon:
         for move in self.moves:
             print(f" Lvl {move['level']:>2} - {move['name'].title()}")
         print(f"{'='*30}\n")
+
+    def to_dict(self):
+        # This method converts the Pokemon object into a dictionary format, which is useful for serialization (e.g., when storing in a database or sending as JSON in an API response). It includes all relevant attributes of the Pokemon, such as name, ID, types, forms, evolution line, abilities, and moves.
+        return {
+            "name": self.name,
+            "id": self.id,
+            "types": self.types,
+            "forms": self.forms,
+            "evolution_line": self.evolution_line,
+            "abilities": self.abilities,
+            "moves": self.moves
+        }
 
 class Team:
     def __init__(self, name, gen):
@@ -102,5 +115,12 @@ class Team:
              print(f"{i}: {pkmn.name} | Type: {'/'.join(pkmn.types).title()}")
         print(f"{'='*30}\n")
 
-
-     
+    # This method converts the Team object into a dictionary format, which is useful for serialization (e.g., when storing in a database or sending as JSON in an API response). It includes the team name, generation, and a list of members where each member is also converted to a dictionary using their own to_dict method.
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "generation": self.gen,
+            # Loop through the objects and turn them into dictionaries too!
+            "members": [pokemon.to_dict() for pokemon in self.members] 
+        }
+#models.py ends here. This file defines the core data structures for the Pokemon team builder application, including the Pokemon class, which encapsulates all relevant information about a Pokemon, and the Team class, which manages a collection of Pokemon and provides methods for adding members and displaying the team. These classes will be used throughout the application to create and manage Pokemon teams based on user input and data retrieved from the PokeAPI.
