@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, status, Depends
+from fastapi import FastAPI, HTTPException, status, Depends, APIRouter, HTTPException
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
 from database import PokemonRepository, get_db_connection, intialize_db
@@ -89,6 +89,29 @@ def login_user(user: UserCredentials, repo: PokemonRepository = Depends(get_repo
         "message": "Login successful!",
         "user_id": db_user_id
     }
+
+# This endpoint allows users to create a new Pokemon team by providing a team name and a list of Pokemon names. It validates the Pokemon names against the PokeAPI and returns the corresponding Pokemon IDs if they are valid. If any of the provided Pokemon names are invalid, it raises an HTTP 400 error with a message indicating which name was invalid. --- IGNORE ---
+@app.post("/team")
+def create_team(team_name: str, pokemon_names: list[str], repo: PokemonRepository = Depends(get_repo)):
+    valid_pokemon_ids = []
+    for name in pokemon_names:
+        pokemon_info = get_pokemon_info(name)
+        if pokemon_info:
+            valid_pokemon_ids.append(pokemon_info['id'])
+        else:
+            raise HTTPException(status_code=400, detail=f"Invalid Pokemon name: {name}")
+        
+    return {"message": f"Team '{team_name}' created with Pokemon IDs: {valid_pokemon_ids}"}
+
+# This endpoint retrieves the Pokemon team associated with a specific user ID. It uses the repository to fetch the team data from the database. If no team is found for the given user ID, it raises a 404 error. Otherwise, it returns the team data in the response. --- IGNORE ---
+@app.get("/team/{user_id}")
+def get_team(user_id: int, repo: PokemonRepository = Depends(get_repo)):
+    team = repo.get_team_by_user(user_id)
+    # If no team is found for the given user ID, we raise a 404 error to indicate that the resource was not found. Otherwise, we return the team data in the response.
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found for this user")
+    return {"team": team.todict()}
+
 
 @app.get("/")
 def read_root():
