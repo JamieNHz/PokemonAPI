@@ -4,6 +4,10 @@ import os
 import jwt
 from datetime import datetime, timedelta, timezone
 
+SECRET_KEY = os.environ["SECRET_KEY"]
+ALGORITHM = os.environ["ALGORITHM"]
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ["ACCESS_TOKEN_EXPIRE_MINUTES"])
+
 def create_access_token(data: dict):
     # We create a copy of the data to encode, which allows us to add additional information (like the expiration time) without modifying the original data dictionary that was passed in. This is a common practice to ensure that the function does not have side effects on the input data.
     to_encode = data.copy()
