@@ -1,3 +1,4 @@
+from ast import List
 from fastapi import FastAPI, HTTPException, status, Depends, APIRouter, HTTPException
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
@@ -5,6 +6,9 @@ from database import PokemonRepository, get_db_connection, intialize_db
 from auth import hash_password, verify_password, create_access_token
 import jwt
 from fastapi.security import OAuth2PasswordBearer
+from pokemon_api import get_pokemon_info, get_pokemon_gen
+from models import Pokemon, Team
+
 # Tells FastAPI where to get token
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
@@ -120,21 +124,40 @@ def login_user(user: UserCredentials, repo: PokemonRepository = Depends(get_repo
     }
 
 # This endpoint allows users to create a new Pokemon team by providing a team name and a list of Pokemon names. It validates the Pokemon names against the PokeAPI and returns the corresponding Pokemon IDs if they are valid. If any of the provided Pokemon names are invalid, it raises an HTTP 400 error with a message indicating which name was invalid. --- IGNORE ---
+class TeamCreate(BaseModel):
+    team_name: str          # The name of the team the user wants to create
+    generation: str        # The generation the user wants to build their team from
+    pokemon_names: List[str]
 @app.post("/team")
 def create_team(
-    team_data: TeamCreate, # 👈 Expects a clean JSON body now
-    current_user_id: int = Depends(get_current_user), # 👈 THE BOUNCER!
-    repo: PokemonRepository = Depends(get_repo)
+    team_data: TeamCreate, # Team to be created, including team name, generation, and list of Pokemon names
+    current_user_id: int = Depends(get_current_user), # The Bouncer checks the token, extracts the user_id, and provides it here
+    repo: PokemonRepository = Depends(get_repo) # The database repository to interact with the database and save the team
 ):
-    valid_pokemon_ids = []
-    for name in pokemon_names:
-        pokemon_info = get_pokemon_info(name)
-        if pokemon_info:
-            valid_pokemon_ids.append(pokemon_info['id'])
-        else:
-            raise HTTPException(status_code=400, detail=f"Invalid Pokemon name: {name}")
+    generations = get_pokemon_gen()
+    all_gen = list(generations.keys())
+    if team_data.generation not in all_gen:
+        raise HTTPException(status_code=400, detail=f"Invalid generation. Valid options are: {', '.join(all_gen)}")
+    else:
+    
+        # We loop through each Pokemon name provided in the request, fetch its information from the PokeAPI, and check if it belongs to the specified generation. If it does, we create a Pokemon object and add it to the team members list. If any Pokemon name is invalid (not found in the API), we raise an HTTP 400 error with a message indicating which name was invalid.
+        poke_team = Team(team_data.team_name, team_data.generation)
+        for name in team_data.pokemon_names:
+            pokemon_info = get_pokemon_info(name)
+            if pokemon_info:
+                poke = Pokemon(pokemon_info)
+                if poke.check_gen(team_data.generation):
+                    poke_team.add_pokemon(poke)
+                else:
+                    raise HTTPException(status_code=400, detail=f"{name} does not exist in {team_data.generation}")
+            else:
+                raise HTTPException(status_code=400, detail=f"Invalid Pokemon name: {name}")
         
-    return {"message": f"Team '{team_name}' created with Pokemon IDs: {valid_pokemon_ids}"}
+        
+
+        repo.add_team(current_user_id, poke_team)
+            
+        return {"message": f"Team '{poke_team.name}' created successfully, all {len(poke_team.get_pokemon_list())} Pokemon added!"}
 
 # This endpoint retrieves the Pokemon team associated with a specific user ID. It uses the repository to fetch the team data from the database. If no team is found for the given user ID, it raises a 404 error. Otherwise, it returns the team data in the response. --- IGNORE ---
 @app.get("/team/")
