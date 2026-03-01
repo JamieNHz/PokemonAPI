@@ -5,13 +5,12 @@ class Pokemon:
         self.name = data["name"].capitalize()
         self.id = data["id"]
         #self.gen = gen
-        
+        self.types = [t["type"]["name"] for t in data["types"]]
+        self.forms = [f["name"] for f in data["forms"]]
+        self.abilities = [a["ability"]["name"] for a in data["abilities"]]
         # 2. Extract Types (into a simple list of strings)
         if gen and evo_data:
-            self.gen = gen
-            self.types = [t["type"]["name"] for t in data["types"]]
-
-            self.forms = [f["name"] for f in data["forms"]]
+            self.gen = gen  
             current_stage = evo_data["chain"]
             self.evolution_line = []
             while current_stage:
@@ -42,7 +41,7 @@ class Pokemon:
                     current_stage = None
             
             # 3. Extract Abilities
-            self.abilities = [a["ability"]["name"] for a in data["abilities"]]
+            
             
             # 4. Extract Level-Up Moves (specifically for Red-Blue as an example)
             self.moves = []
@@ -58,6 +57,9 @@ class Pokemon:
             
             # Sort moves by level
             self.moves.sort(key=lambda x: x["level"])
+        else:
+            self.evolution_line = []
+            self.moves = data["moves"]
     """
     def display_info(self):
         # This method prints out all the relevant information about the Pokemon in a nicely formatted way, including its name, ID, types, forms, evolution line, abilities, and level-up moves for the specified generation. The output is designed to be clear and visually appealing for users who want to see the details of their chosen Pokemon.
@@ -84,7 +86,7 @@ class Pokemon:
             "abilities": self.abilities,
             "moves": self.moves
         }
-    
+    # This method is for checking whether the pokemon exists within this generation
     def check_gen(self, target_gen):
         pok_exists = []
         pok_exists = any(
