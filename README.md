@@ -2,7 +2,7 @@
 
 A modular CLI application that interfaces with the PokeAPI to provide detailed Pokémon data, including version-specific move sets and full evolution chain discovery.
 
-## 🚀 Developer Highlights (DevEx)
+## 🚀 Developer Highlights
 This project was built with a focus on **Separation of Concerns** and **Maintainable Architecture**:
 - **Modular Design:** Logic is split across `api`, `models`, and `interface` modules.
 - **Dynamic Filtering:** Implements `any()` iterators to validate Pokémon availability across different game generations.
@@ -36,16 +36,16 @@ This project is actively evolving from a standalone CLI tool into a fully contai
 
 ### Phase 3: Authentication & Security
 - [x] Implement password hashing (bcrypt/argon2).
-- [ ] Create secure user registration and login endpoints.
-- [ ] Implement JWT generation and validation middleware.
-- [ ] Protect specific Pokémon data routes with required authentication.
+- [x] Create secure user registration and login endpoints.
+- [x] Implement JWT generation and validation middleware.
+- [x] Protect specific Pokémon data routes with required authentication.
 
 ### Phase 4: Domain & Data Handling
 - [ ] Create immutable domain models (User, Pokemon).
 - [ ] Implement data transformation logic (mapping over manual loops).
 - [ ] Architect data isolation (store and retrieve Pokémon data strictly per user).
 
-### Phase 5: Production-Level SRE Improvements
+### Phase 5: Production Level Improvements
 - [ ] Implement structured logging for observability.
 - [ ] Build application health check endpoints (SLI monitoring).
 - [ ] Add native Docker healthchecks.
