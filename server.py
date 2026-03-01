@@ -1,9 +1,10 @@
-from ast import List
+# Server.py start
+from typing import List
 from fastapi import FastAPI, HTTPException, status, Depends, APIRouter, HTTPException
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
 from database import PokemonRepository, get_db_connection, intialize_db
-from auth import hash_password, verify_password, create_access_token
+from auth import hash_password, verify_password, create_access_token, SECRET_KEY, ALGORITHM
 import jwt
 from fastapi.security import OAuth2PasswordBearer
 from pokemon_api import get_pokemon_info, get_pokemon_gen
@@ -157,18 +158,20 @@ def create_team(
 
         repo.add_team(current_user_id, poke_team)
             
-        return {"message": f"Team '{poke_team.name}' created successfully, all {len(poke_team.get_pokemon_list())} Pokemon added!"}
+        return {"message": f"Team '{poke_team.name}' created successfully, all {len(poke_team.members)} Pokemon added!"}
 
 # This endpoint retrieves the Pokemon team associated with a specific user ID. It uses the repository to fetch the team data from the database. If no team is found for the given user ID, it raises a 404 error. Otherwise, it returns the team data in the response. --- IGNORE ---
-@app.get("/team/")
+@app.get("/team")
 def get_team(current_user_id: int = Depends(get_current_user), repo: PokemonRepository = Depends(get_repo)):
     team = repo.get_team_by_user(current_user_id)
     # If no team is found for the given user ID, we raise a 404 error to indicate that the resource was not found. Otherwise, we return the team data in the response.
     if not team:
         raise HTTPException(status_code=404, detail="Team not found for this user")
-    return {"team": team.todict()}
+    return {"team": team.to_dict()}
 
 
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the Pokemon Team Builder API! Go to /docs to test the endpoints."}
+
+# Server.py end
