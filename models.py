@@ -1,62 +1,64 @@
 #models.py start
 class Pokemon:
-    def __init__(self, data, evo_data, gen):
+    def __init__(self, data, evo_data = None, gen=None):
         # 1. Basic Info
         self.name = data["name"].capitalize()
         self.id = data["id"]
-        self.gen = gen
+        #self.gen = gen
         
         # 2. Extract Types (into a simple list of strings)
-        self.types = [t["type"]["name"] for t in data["types"]]
+        if gen and evo_data:
+            self.gen = gen
+            self.types = [t["type"]["name"] for t in data["types"]]
 
-        self.forms = [f["name"] for f in data["forms"]]
-        current_stage = evo_data["chain"]
-        self.evolution_line = []
-        while current_stage:
-            name = current_stage["species"]["name"].capitalize()
-            # 1. Dig for the evolution level
-            # We check if details exist (the first pokemon has None/Empty)
-            details = current_stage["evolution_details"]
-            if details:
-                det = details[0]
-                trigger = det["trigger"]["name"]
-                if trigger == "level-up" and det["min_level"]:
-                    self.evolution_line.append(f"{name} (Lvl {det['min_level']})")
-                    
-                elif trigger == "use-item":
-                        item = det["item"]["name"].replace("-", " ").title()
-                        self.evolution_line.append(f"{name} ({item})")
+            self.forms = [f["name"] for f in data["forms"]]
+            current_stage = evo_data["chain"]
+            self.evolution_line = []
+            while current_stage:
+                name = current_stage["species"]["name"].capitalize()
+                # 1. Dig for the evolution level
+                # We check if details exist (the first pokemon has None/Empty)
+                details = current_stage["evolution_details"]
+                if details:
+                    det = details[0]
+                    trigger = det["trigger"]["name"]
+                    if trigger == "level-up" and det["min_level"]:
+                        self.evolution_line.append(f"{name} (Lvl {det['min_level']})")
+                        
+                    elif trigger == "use-item":
+                            item = det["item"]["name"].replace("-", " ").title()
+                            self.evolution_line.append(f"{name} ({item})")
 
-                elif trigger == "trade":
-                        self.evolution_line.append(f"{name} (Trade)")
-            else:
-                self.evolution_line.append(name)
+                    elif trigger == "trade":
+                            self.evolution_line.append(f"{name} (Trade)")
+                else:
+                    self.evolution_line.append(name)
 
-            if current_stage['evolves_to']:
+                if current_stage['evolves_to']:
 
-                current_stage = current_stage["evolves_to"][0]
-            else:
+                    current_stage = current_stage["evolves_to"][0]
+                else:
 
-                current_stage = None
-        
-        # 3. Extract Abilities
-        self.abilities = [a["ability"]["name"] for a in data["abilities"]]
-        
-        # 4. Extract Level-Up Moves (specifically for Red-Blue as an example)
-        self.moves = []
-        for m in data["moves"]:
-            for detail in m["version_group_details"]:
-                if (detail["move_learn_method"]["name"] == "level-up" and 
-                    detail["version_group"]["name"] == gen and
-                    detail["level_learned_at"] > 1):
-                    self.moves.append({
-                        "name": m["move"]["name"],
-                        "level": detail["level_learned_at"]
-                    })
-        
-        # Sort moves by level
-        self.moves.sort(key=lambda x: x["level"])
-
+                    current_stage = None
+            
+            # 3. Extract Abilities
+            self.abilities = [a["ability"]["name"] for a in data["abilities"]]
+            
+            # 4. Extract Level-Up Moves (specifically for Red-Blue as an example)
+            self.moves = []
+            for m in data["moves"]:
+                for detail in m["version_group_details"]:
+                    if (detail["move_learn_method"]["name"] == "level-up" and 
+                        detail["version_group"]["name"] == gen and
+                        detail["level_learned_at"] > 1):
+                        self.moves.append({
+                            "name": m["move"]["name"],
+                            "level": detail["level_learned_at"]
+                        })
+            
+            # Sort moves by level
+            self.moves.sort(key=lambda x: x["level"])
+    """
     def display_info(self):
         # This method prints out all the relevant information about the Pokemon in a nicely formatted way, including its name, ID, types, forms, evolution line, abilities, and level-up moves for the specified generation. The output is designed to be clear and visually appealing for users who want to see the details of their chosen Pokemon.
         print(f"\n{'='*30}")
@@ -70,7 +72,7 @@ class Pokemon:
         for move in self.moves:
             print(f" Lvl {move['level']:>2} - {move['name'].title()}")
         print(f"{'='*30}\n")
-
+    """
     def to_dict(self):
         # This method converts the Pokemon object into a dictionary format, which is useful for serialization (e.g., when storing in a database or sending as JSON in an API response). It includes all relevant attributes of the Pokemon, such as name, ID, types, forms, evolution line, abilities, and moves.
         return {
@@ -82,6 +84,15 @@ class Pokemon:
             "abilities": self.abilities,
             "moves": self.moves
         }
+    
+    def check_gen(self, target_gen):
+        pok_exists = []
+        pok_exists = any(
+                    group["version_group"]["name"] == target_gen
+                    for move in self.moves
+                    for group in move["version_group_details"]
+                    )
+        return pok_exists
 
 class Team:
     def __init__(self, name, gen):
