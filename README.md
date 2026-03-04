@@ -30,7 +30,7 @@ This project was built with a focus on modern backend architecture, security, an
 2. **Set up your environment variables:**
    Copy the example environment file to create your active `.env` file:
    ```bash
-   cp cp.env .env
+   cp .env.example .env
    ```
 
 3. **Spin up the backend:**
