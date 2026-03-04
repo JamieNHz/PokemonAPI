@@ -118,13 +118,12 @@ def login_user(user: UserCredentials, repo: PokemonRepository = Depends(get_repo
         raise HTTPException(status_code=401, detail="Incorrect password")
     # If we reach this point, the login is successful
     access_token = create_access_token(data={"sub": str(db_user_id)})
-    # We return the access token to the client, which they can use for authenticated requests to protected endpoints. The token includes the user ID in its payload, allowing us to identify the user in future requests.
+    # We return the access token to the client, which they can use for authenticated requests to protected endpoints.
     return {
         "access_token": access_token, 
         "token_type": "bearer"
     }
 
-# This endpoint allows users to create a new Pokemon team by providing a team name and a list of Pokemon names. It validates the Pokemon names against the PokeAPI and returns the corresponding Pokemon IDs if they are valid. If any of the provided Pokemon names are invalid, it raises an HTTP 400 error with a message indicating which name was invalid. --- IGNORE ---
 class TeamCreate(BaseModel):
     team_name: str          # The name of the team the user wants to create
     generation: str        # The generation the user wants to build their team from
@@ -135,13 +134,13 @@ def create_team(
     current_user_id: int = Depends(get_current_user), # The Bouncer checks the token, extracts the user_id, and provides it here
     repo: PokemonRepository = Depends(get_repo) # The database repository to interact with the database and save the team
 ):
+    # Validate the generation input and fetch the corresponding version group data from the PokeAPI. This will allow us to check if each Pokemon exists in the specified generation.
     generations = get_pokemon_gen()
     all_gen = list(generations.keys())
     if team_data.generation not in all_gen:
         raise HTTPException(status_code=400, detail=f"Invalid generation. Valid options are: {', '.join(all_gen)}")
     else:
-    
-        # We loop through each Pokemon name provided in the request, fetch its information from the PokeAPI, and check if it belongs to the specified generation. If it does, we create a Pokemon object and add it to the team members list. If any Pokemon name is invalid (not found in the API), we raise an HTTP 400 error with a message indicating which name was invalid.
+        # If the generation is valid, we proceed to create the time and add the pokemon
         poke_team = Team(team_data.team_name, team_data.generation)
         for name in team_data.pokemon_names:
             pokemon_info = get_pokemon_info(name)
@@ -160,7 +159,6 @@ def create_team(
             
         return {"message": f"Team '{poke_team.name}' created successfully, all {len(poke_team.members)} Pokemon added!"}
 
-# This endpoint retrieves the Pokemon team associated with a specific user ID. It uses the repository to fetch the team data from the database. If no team is found for the given user ID, it raises a 404 error. Otherwise, it returns the team data in the response. --- IGNORE ---
 @app.get("/team")
 def get_team(current_user_id: int = Depends(get_current_user), repo: PokemonRepository = Depends(get_repo)):
     team = repo.get_team_by_user(current_user_id)

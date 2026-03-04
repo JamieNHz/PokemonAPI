@@ -2,7 +2,7 @@
 import requests
 
 base_url = "https://pokeapi.co/api/v2/"
-
+# API call to get the basic info of a pokemon, including its name, id, types, forms, abilities, and level-up moves for a specific generation.
 def get_pokemon_info(name):
     url = f"{base_url}/pokemon/{name}"
     response = requests.get(url)
@@ -12,7 +12,7 @@ def get_pokemon_info(name):
         return pokemon_data
     else:
         print(f"Failed to retrieve data {response.status_code}")
-
+# API call to get the evolutionary line of pokemon. We will use the species endpoint to get the URL for the evolution chain, and then make another call to get the full evolution data.
 def get_pokemon_evo(url):
     species_request = requests.get(url)
 
@@ -32,10 +32,10 @@ def get_pokemon_gen():
         response = requests.get(url)
         data = response.json()
         
-        # 1. Add the results from THIS page to our master list
+        #  We extend our all_groups list with the results from this page. This way, we accumulate all the version groups across multiple pages of results.
         all_groups.extend(data["results"])
         
-        # 2. Update the URL to the 'next' page link provided by the API
+        #  We update the url variable to the next page of results. If there are no more pages, data["next"] will be None, and the loop will terminate.
         url = data["next"] 
         
         print(f"Fetched {len(all_groups)} groups so far...")
@@ -44,5 +44,4 @@ def get_pokemon_gen():
 
     return version_dict
 
-# pokemon_api.py ends here. The functions defined in this file are responsible for interacting with the PokeAPI to retrieve information about Pokemon, their evolutions, and the available generations. These functions will be used by other parts of the application, such as the main logic and database interactions, to build the functionality of the Pokemon team builder application.
-
+# pokemon_api.py ends here
