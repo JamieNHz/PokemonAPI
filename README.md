@@ -1,22 +1,67 @@
-# ⚡️ Python Pokédex & Evolution Tracker
+# ⚡️ Pokémon Team Builder API
 
-A modular CLI application that interfaces with the PokeAPI to provide detailed Pokémon data, including version-specific move sets and full evolution chain discovery.
+A fully containerized, RESTful API built with **FastAPI** and **SQL Server**. This backend service allows users to securely register, authenticate via JWT, and build custom Pokémon teams that are validated in real-time against the public PokéAPI.
 
 ## 🚀 Developer Highlights
-This project was built with a focus on **Separation of Concerns** and **Maintainable Architecture**:
-- **Modular Design:** Logic is split across `api`, `models`, and `interface` modules.
-- **Dynamic Filtering:** Implements `any()` iterators to validate Pokémon availability across different game generations.
-- **Recursive Data Parsing:** Navigates complex, nested JSON trees to reconstruct linear evolution paths.
-- **Robust Input Handling:** Feature-rich CLI with input validation and dynamic menu generation.
+This project was built with a focus on modern backend architecture, security, and zero-dependency deployment:
+- **Two-Tier Architecture:** Complete separation of concerns between the application logic (FastAPI) and the data layer (Microsoft SQL Server), orchestrated via Docker Compose.
+- **Robust Security:** Implements JWT (JSON Web Token) authentication with bcrypt password hashing. Routes are protected via dependency injection ("Bouncer" pattern).
+- **Data Validation:** Utilizes Pydantic models for strict, fail-fast request payload validation, preventing malformed data from ever hitting the application logic.
+- **External API Orchestration:** Dynamically communicates with the external PokéAPI to validate Pokémon existence and game-generation legality before saving to the database.
+- **Containerized Testing:** Includes a fully isolated, containerized integration test suite that tests the entire user lifecycle without requiring local Python environments.
 
+## 🛠 Tech Stack
+* **Framework:** FastAPI (Python)
+* **Database:** Microsoft SQL Server (Dockerized)
+* **Authentication:** PyJWT & passlib (bcrypt)
+* **Infrastructure:** Docker & Docker Compose
+* **External Integrations:** PokéAPI
 
+## 📦 Quick Start (Zero-Dependency Setup)
 
-## 🛠 Installation
+**Prerequisites:** You must have [Docker Desktop](https://www.docker.com/products/docker-desktop) installed and running. No local Python installation is required.
 
 1. **Clone the repository:**
    ```bash
-   git clone [https://github.com/JamieNHZ/PokemonAPI.git](https://github.com/JamieNHZ/PokemonAPI.git)
+   git clone https://github.com/JamieNHZ/PokemonAPI.git
    cd PokemonAPI
+   ```
+
+2. **Set up your environment variables:**
+   Copy the example environment file to create your active `.env` file:
+   ```bash
+   cp cp.env .env
+   ```
+
+3. **Spin up the backend:**
+   ```bash
+   docker-compose up --build -d
+   ```
+
+4. **Explore the API:**
+   The API will be live at `http://localhost:8000`. 
+   FastAPI automatically generates interactive Swagger UI documentation. Visit:
+   👉 **[http://localhost:8000/docs](http://localhost:8000/docs)**
+
+## 🧪 Running the Integration Tests
+
+This project includes a fully containerized integration test script (`test_api.py`) that simulates a complete user journey (Register ➔ Login ➔ Extract JWT ➔ Create Team ➔ Fetch Team).
+
+To run the automated test suite against the live Docker network, open your terminal and run:
+
+```bash
+docker-compose --profile testing run --rm integration-test
+```
+*(This command spins up a temporary test container, executes the HTTP requests against the API, prints the JSON responses, and cleanly deletes itself upon completion.)*
+
+## 📡 Core Endpoints
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| `POST` | `/register` | Creates a new user in the SQL database. | No |
+| `POST` | `/login` | Verifies credentials and returns a JWT access token. | No |
+| `POST` | `/team` | Validates and saves a new Pokémon team to the database. | **Yes** |
+| `GET`  | `/team` | Retrieves the authenticated user's saved team. | **Yes** |
 
 ## 🏗️ Architecture & Development Roadmap
 
