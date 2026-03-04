@@ -2,8 +2,8 @@
 import pyodbc
 import time
 import os
-from models import Team, Pokemon
-from pokemon_api import get_pokemon_evo, get_pokemon_info
+from app.models import Team, Pokemon
+from app.pokemon_api import get_pokemon_evo, get_pokemon_info
 from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()

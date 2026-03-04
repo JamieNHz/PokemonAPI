@@ -3,12 +3,12 @@ from typing import List
 from fastapi import FastAPI, HTTPException, status, Depends, APIRouter, HTTPException
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
-from database import PokemonRepository, get_db_connection, intialize_db
-from auth import hash_password, verify_password, create_access_token, SECRET_KEY, ALGORITHM
+from app.database import PokemonRepository, get_db_connection, intialize_db
+from app.auth import hash_password, verify_password, create_access_token, SECRET_KEY, ALGORITHM
 import jwt
 from fastapi.security import OAuth2PasswordBearer
-from pokemon_api import get_pokemon_info, get_pokemon_gen
-from models import Pokemon, Team
+from app.pokemon_api import get_pokemon_info, get_pokemon_gen
+from app.models import Pokemon, Team
 
 # Tells FastAPI where to get token
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
