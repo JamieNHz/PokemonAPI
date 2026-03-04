@@ -37,6 +37,22 @@ services:
     networks:
       - pokemon_net
 
+  integration-test:
+    build: .
+    container_name: pokemon_test
+    
+    command: python test_api.py
+    depends_on:
+      - app
+
+    environment:
+      - API_HOST=app
+    networks:
+      - pokemon_net
+
+    profiles:
+      - testing
+
 networks:
   pokemon_net:
     driver: bridge
