@@ -1,6 +1,10 @@
 #models.py start
 class Pokemon:
     def __init__(self, data, evo_data = None, gen=None):
+        if gen: # Only check if a generation was actually provided
+            if not self.check_gen(data["moves"], gen):
+                raise ValueError(f"{data['name'].capitalize()} does not exist in {gen}, please check your team and try again.")
+
         # 1. Basic Info
         self.name = data["name"].capitalize()
         self.id = data["id"]
@@ -9,58 +13,56 @@ class Pokemon:
         self.forms = [f["name"] for f in data["forms"]]
         self.abilities = [a["ability"]["name"] for a in data["abilities"]]
         # 2. Extract Types (into a simple list of strings)
-        if gen and evo_data:
-            self.gen = gen  
-            current_stage = evo_data["chain"]
-            self.evolution_line = []
-            while current_stage:
-                name = current_stage["species"]["name"].capitalize()
-                
-                # We check if details exist (the first pokemon has None/Empty)
-                details = current_stage["evolution_details"]
-                
-                if details:
-                    det = details[0]
-                    trigger = det["trigger"]["name"]
-                    if trigger == "level-up" and det["min_level"]:
-                        self.evolution_line.append(f"{name} (Lvl {det['min_level']})")
-                        
-                    elif trigger == "use-item":
-                            item = det["item"]["name"].replace("-", " ").title()
-                            self.evolution_line.append(f"{name} ({item})")
-
-                    elif trigger == "trade":
-                            self.evolution_line.append(f"{name} (Trade)")
-                else:
-                    self.evolution_line.append(name)
-
-                if current_stage['evolves_to']:
-
-                    current_stage = current_stage["evolves_to"][0]
-                else:
-
-                    current_stage = None
+       
+        self.gen = gen  
+        current_stage = evo_data["chain"]
+        self.evolution_line = []
+        while current_stage:
+            name = current_stage["species"]["name"].capitalize()
             
-            # 3. Extract Abilities
+            # We check if details exist (the first pokemon has None/Empty)
+            details = current_stage["evolution_details"]
             
-            
-            # 4. Extract Level-Up Moves (specifically for Red-Blue as an example)
-            self.moves = []
-            for m in data["moves"]:
-                for detail in m["version_group_details"]:
-                    if (detail["move_learn_method"]["name"] == "level-up" and 
-                        detail["version_group"]["name"] == gen and
-                        detail["level_learned_at"] > 1):
-                        self.moves.append({
-                            "name": m["move"]["name"],
-                            "level": detail["level_learned_at"]
-                        })
-            
-            # Sort moves by level
-            self.moves.sort(key=lambda x: x["level"])
-        else:
-            self.evolution_line = []
-            self.moves = data["moves"]
+            if details:
+                det = details[0]
+                trigger = det["trigger"]["name"]
+                if trigger == "level-up" and det["min_level"]:
+                    self.evolution_line.append(f"{name} (Lvl {det['min_level']})")
+                    
+                elif trigger == "use-item":
+                        item = det["item"]["name"].replace("-", " ").title()
+                        self.evolution_line.append(f"{name} ({item})")
+
+                elif trigger == "trade":
+                        self.evolution_line.append(f"{name} (Trade)")
+            else:
+                self.evolution_line.append(name)
+
+            if current_stage['evolves_to']:
+
+                current_stage = current_stage["evolves_to"][0]
+            else:
+
+                current_stage = None
+        
+        # 3. Extract Abilities
+        
+        
+        # 4. Extract Level-Up Moves (specifically for Red-Blue as an example)
+        self.moves = []
+        for m in data["moves"]:
+            for detail in m["version_group_details"]:
+                if (detail["move_learn_method"]["name"] == "level-up" and 
+                    detail["version_group"]["name"] == gen and
+                    detail["level_learned_at"] > 1):
+                    self.moves.append({
+                        "name": m["move"]["name"],
+                        "level": detail["level_learned_at"]
+                    })
+        
+        # Sort moves by level
+        self.moves.sort(key=lambda x: x["level"])
+        
     """
     def display_info(self):
         print(f"\n{'='*30}")
@@ -87,14 +89,12 @@ class Pokemon:
             "moves": self.moves
         }
     # This method is for checking whether the pokemon exists within this generation
-    def check_gen(self, target_gen):
-        pok_exists = []
-        pok_exists = any(
-                    group["version_group"]["name"] == target_gen
-                    for move in self.moves
-                    for group in move["version_group_details"]
-                    )
-        return pok_exists
+    def check_gen(self, moves_data, target_gen):
+        return any(
+            group["version_group"]["name"] == target_gen
+            for move in moves_data
+            for group in move["version_group_details"]
+        )
 
 class Team:
     def __init__(self, name, gen):
