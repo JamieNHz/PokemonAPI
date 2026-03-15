@@ -7,8 +7,9 @@ from app.database import PokemonRepository, get_db_connection, intialize_db
 from app.auth import hash_password, verify_password, create_access_token, SECRET_KEY, ALGORITHM
 import jwt
 from fastapi.security import OAuth2PasswordBearer
-from app.pokemon_api import get_pokemon_info, get_pokemon_gen
+from app.pokemon_api import get_pokemon_info, get_pokemon_gen, get_pokemon_evo
 from app.models import Pokemon, Team
+from app.schemas import TeamSchema
 
 # Tells FastAPI where to get token
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
@@ -142,10 +143,12 @@ def create_team(
     else:
         # If the generation is valid, we proceed to create the time and add the pokemon
         poke_team = Team(team_data.team_name, team_data.generation)
-        for name in team_data.pokemon_names:
+        # Loop through all provided pokemon names, checking if they exist, and if they do fetch evolution info before building pokemon object.
+        for name in team_data.pokemon_names:      
             pokemon_info = get_pokemon_info(name)
             if pokemon_info:
-                poke = Pokemon(pokemon_info)
+                evo = get_pokemon_evo(pokemon_info["species"]["url"])
+                poke = Pokemon(pokemon_info, evo, team_data.generation)
                 if poke.check_gen(team_data.generation):
                     poke_team.add_pokemon(poke)
                 else:
