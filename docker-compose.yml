@@ -3,6 +3,7 @@ services:
   # Using the official Microsoft SQL Server image for Linux
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: pokemon_sql_server
+    platform: linux/amd64
     # Expose SQL Server's default port to the host machine
     ports:
       - "1433:1433"
@@ -36,14 +37,23 @@ services:
 
     networks:
       - pokemon_net
+    
+    healthcheck:
+      # We use Python's built-in urllib so we don't have to install 'curl' in your Dockerfile
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
+      interval: 5s       # Time between pings
+      timeout: 5s        # Time to wait for a response
+      retries: 15        # How many times to try before giving up
+      start_period: 15s  # Give the DB time to boot before we start counting failures
 
   integration-test:
     build: .
     container_name: pokemon_test
     
-    command: python test_api.py
+    command: python tests/test_api.py
     depends_on:
-      - app
+      app:
+        condition: service_healthy
 
     environment:
       - API_HOST=app
