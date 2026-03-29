@@ -56,4 +56,12 @@ def build_pokemon_schema(data: dict, evo_data: dict, gen: str) -> PokemonSchema:
         moves=moves
     )
 
+def is_pokemon_in_generation(moves: list, generation: str) -> bool:
+    """Checks if any of the Pokemon's moves are learnable in the specified generation."""
+    return any(
+        group["version_group"]["name"] == generation
+        for move in moves
+        for group in move["version_group_details"]
+    )
+
 # services end
