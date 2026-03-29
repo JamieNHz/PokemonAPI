@@ -9,8 +9,8 @@ import jwt
 from fastapi.security import OAuth2PasswordBearer
 from app.pokemon_api import get_pokemon_info, get_pokemon_gen, get_pokemon_evo
 from app.models import Pokemon, Team
-from app.schemas import TeamSchema
-from app.services import build_pokemon_schema
+from app.schemas import TeamSchema, TeamCreate
+from app.services import build_pokemon_schema, is_pokemon_in_generation
 
 # Tells FastAPI where to get token
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
@@ -146,6 +146,12 @@ def create_team(
         pokemon_info = get_pokemon_info(name)
         if not pokemon_info:
             raise HTTPException(status_code=400, detail=f"Invalid Pokemon name: {name}")
+        
+        if not is_pokemon_in_generation(pokemon_info["moves"], team_data.generation):
+            raise HTTPException(
+                status_code=400, 
+                detail=f"{name.capitalize()} does not exist in {team_data.generation}. Please check your team and try again."
+            )
             
         evo_data = get_pokemon_evo(pokemon_info["species"]["url"])
         
