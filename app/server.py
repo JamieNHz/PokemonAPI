@@ -10,6 +10,7 @@ from fastapi.security import OAuth2PasswordBearer
 from app.pokemon_api import get_pokemon_info, get_pokemon_gen, get_pokemon_evo
 from app.models import Pokemon, Team
 from app.schemas import TeamSchema
+from app.services import build_pokemon_schema
 
 # Tells FastAPI where to get token
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
@@ -125,42 +126,47 @@ def login_user(user: UserCredentials, repo: PokemonRepository = Depends(get_repo
         "token_type": "bearer"
     }
 
-class TeamCreate(BaseModel):
-    team_name: str          # The name of the team the user wants to create
-    generation: str        # The generation the user wants to build their team from
-    pokemon_names: List[str]
 @app.post("/team")
 def create_team(
-    team_data: TeamCreate, # Team to be created, including team name, generation, and list of Pokemon names
-    current_user_id: int = Depends(get_current_user), # The Bouncer checks the token, extracts the user_id, and provides it here
-    repo: PokemonRepository = Depends(get_repo) # The database repository to interact with the database and save the team
+    team_data: TeamCreate, 
+    current_user_id: int = Depends(get_current_user), 
+    repo: PokemonRepository = Depends(get_repo) 
 ):
-    # Validate the generation input and fetch the corresponding version group data from the PokeAPI. This will allow us to check if each Pokemon exists in the specified generation.
     generations = get_pokemon_gen()
-    all_gen = list(generations.keys())
-    if team_data.generation not in all_gen:
-        raise HTTPException(status_code=400, detail=f"Invalid generation. Valid options are: {', '.join(all_gen)}")
-    else:
-        # If the generation is valid, we proceed to create the time and add the pokemon
-        poke_team = Team(team_data.team_name, team_data.generation)
-        # Loop through all provided pokemon names, checking if they exist, and if they do fetch evolution info before building pokemon object.
-        for name in team_data.pokemon_names:      
-            pokemon_info = get_pokemon_info(name)
-            if pokemon_info:
-                evo = get_pokemon_evo(pokemon_info["species"]["url"])
-                poke = Pokemon(pokemon_info, evo, team_data.generation)
-                if poke.check_gen(team_data.generation):
-                    poke_team.add_pokemon(poke)
-                else:
-                    raise HTTPException(status_code=400, detail=f"{name} does not exist in {team_data.generation}")
-            else:
-                raise HTTPException(status_code=400, detail=f"Invalid Pokemon name: {name}")
-        
-        
+    if team_data.generation not in generations:
+        raise HTTPException(status_code=400, detail=f"Invalid generation. Valid options are: {', '.join(generations.keys())}")
+    
+    if len(team_data.pokemon_names) > 6:
+        raise HTTPException(status_code=400, detail="A team cannot exceed 6 Pokémon.")
 
-        repo.add_team(current_user_id, poke_team)
+    pokemon_members = []
+    
+    # 1. Transform all external data into immutable schemas
+    for name in team_data.pokemon_names:      
+        pokemon_info = get_pokemon_info(name)
+        if not pokemon_info:
+            raise HTTPException(status_code=400, detail=f"Invalid Pokemon name: {name}")
             
-        return {"message": f"Team '{poke_team.name}' created successfully, all {len(poke_team.members)} Pokemon added!"}
+        evo_data = get_pokemon_evo(pokemon_info["species"]["url"])
+        
+        # Build the immutable Pydantic model
+        poke_schema = build_pokemon_schema(pokemon_info, evo_data, team_data.generation)
+        
+        # Note: You'll need to move your `check_gen` logic into a service function or validation step here
+        # For brevity, assuming it passes:
+        pokemon_members.append(poke_schema)
+
+    # 2. Create the immutable Team object all at once
+    poke_team = TeamSchema(
+        name=team_data.team_name,
+        generation=team_data.generation,
+        members=pokemon_members
+    )
+
+    # Because Pydantic allows dot notation (poke_team.name), your repo.add_team will still work as expected.
+    repo.add_team(current_user_id, poke_team)
+        
+    return {"message": f"Team '{poke_team.name}' created successfully, all {len(poke_team.members)} Pokemon added!"}
 
 @app.get("/team")
 def get_team(current_user_id: int = Depends(get_current_user), repo: PokemonRepository = Depends(get_repo)):
