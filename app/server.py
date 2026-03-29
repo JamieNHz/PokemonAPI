@@ -180,7 +180,7 @@ def get_team(current_user_id: int = Depends(get_current_user), repo: PokemonRepo
     # If no team is found for the given user ID, we raise a 404 error to indicate that the resource was not found. Otherwise, we return the team data in the response.
     if not team:
         raise HTTPException(status_code=404, detail="Team not found for this user")
-    return {"team": team.to_dict()}
+    return {"team": team}
 
 
 @app.get("/")
