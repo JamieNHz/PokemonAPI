@@ -20,8 +20,26 @@ def build_pokemon_schema(data: dict, evo_data: dict, gen: str) -> PokemonSchema:
 
     evolution_line = []
     current_stage = evo_data["chain"]
+    
     while current_stage:
-        evolution_line.append(current_stage["species"]["name"].capitalize())
+        name = current_stage["species"]["name"].capitalize()
+        details = current_stage["evolution_details"]
+        
+        if details:
+            det = details[0]
+            trigger = det["trigger"]["name"]
+            if trigger == "level-up" and det["min_level"]:
+                evolution_line.append(f"{name} (Lvl {det['min_level']})")
+            elif trigger == "use-item":
+                item = det["item"]["name"].replace("-", " ").title()
+                evolution_line.append(f"{name} ({item})")
+            elif trigger == "trade":
+                evolution_line.append(f"{name} (Trade)")
+            else:
+                evolution_line.append(name)
+        else:
+            evolution_line.append(name)
+
         if current_stage['evolves_to']:
             current_stage = current_stage["evolves_to"][0]
         else:
@@ -37,3 +55,5 @@ def build_pokemon_schema(data: dict, evo_data: dict, gen: str) -> PokemonSchema:
         evolution_line=evolution_line,
         moves=moves
     )
+
+# services end
