@@ -24,3 +24,10 @@ class TeamSchema(BaseModel):
     generation: str
     members: List[PokemonSchema] = []
     max_size: int = 6
+
+class TeamCreate(BaseModel):
+    team_name: str         
+    generation: str        
+    pokemon_names: List[str]
+
+# schemas end
