@@ -1,0 +1,43 @@
+name: Deploy Pokemon API to Azure
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6 # Native Node 24 support
+
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@v1
+      with:
+        host: ${{ secrets.AZURE_VM_IP }}
+        username: azureuser
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          # 1. Clone or update the repository
+          REPO_URL="https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          if [ ! -d "/home/azureuser/pokemon-api" ]; then
+            git clone $REPO_URL /home/azureuser/pokemon-api
+          fi
+          cd /home/azureuser/pokemon-api
+          git remote set-url origin $REPO_URL
+          git pull origin main
+          
+          # 2. Inject Secrets and Config into .env
+          echo "SQL_SERVER=${{ secrets.SQL_SERVER }}" > .env
+          echo "SQL_DATABASE=PokemonDB" >> .env
+          echo "SQL_USER=${{ secrets.SQL_USER }}" >> .env
+          echo "SQL_PASSWORD=${{ secrets.SQL_PASSWORD }}" >> .env
+          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
+          echo "ALGORITHM=HS256" >> .env
+          echo "ACCESS_TOKEN_EXPIRE_MINUTES=60" >> .env
+          
+          # 3. Rebuild and launch
+          docker compose down
+          docker compose up -d --build
