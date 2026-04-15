@@ -1,71 +1,81 @@
+version: '3.9'
+
 services:
-  db:
-  # Using the official Microsoft SQL Server image for Linux
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: pokemon_sql_server
-    platform: linux/amd64
-    # Expose SQL Server's default port to the host machine
+
+  # ─────────────────────────────────────────────
+  # POKÉMON API SERVICE
+  # ─────────────────────────────────────────────
+  pokemon-api:
+    build:
+      context: ./services/pokemon-api
+      dockerfile: Dockerfile
+    container_name: pokemon-api
     ports:
-      - "1433:1433"
-      # Set environment variables for SQL Server configuration
+      - "8000:8000"                    # Access in browser: http://localhost:8000
+    volumes:
+      - ./services/pokemon-api:/app    # Hot-reload during development
     environment:
-      - ACCEPT_EULA=Y
-      - MSSQL_SA_PASSWORD=${SQL_PASSWORD}
-    volumes:
-    # Mount a named volume to persist SQL Server data across container restarts
-      - sql_data:/var/opt/mssql # Persistent volume
-    networks:
-      - pokemon_net
-
-  app:
-  # Build the application image using the Dockerfile in the current directory
-    build: .
-    container_name: pokemon_app
-    depends_on:
-      - db
-    env_file:
-      - .env
-    # Expose the FastAPI app on port 8000
-    ports:
-      - "8000:8000" # Expose the FastAPI app on port 8000
-
-    # Command to run the FastAPI application using Uvicorn, with hot reload enabled for development
-    command: uvicorn app.server:app --host 0.0.0.0 --port 8000 --reload
-
-    volumes:
-      - .:/app # Mount the current directory to /app in the container for development
-
-    networks:
-      - pokemon_net
-    
+      - PYTHONUNBUFFERED=1
+      - POKEMON_PORT=8000
+      - AUTH_SERVICE_URL=http://auth:8001   # ← How pokemon-api talks to auth
+      # Example Azure SQL connection (uncomment and fill when ready)
+      # - DATABASE_URL=postgresql+psycopg2://user:password@your-azure-sql-server.database.windows.net:5432/dbname?sslmode=require
     healthcheck:
-      # We use Python's built-in urllib so we don't have to install 'curl' in your Dockerfile
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
-      interval: 5s       # Time between pings
-      timeout: 5s        # Time to wait for a response
-      retries: 15        # How many times to try before giving up
-      start_period: 15s  # Give the DB time to boot before we start counting failures
-
-  integration-test:
-    build: .
-    container_name: pokemon_test
-    
-    command: python tests/test_api.py
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     depends_on:
-      app:
-        condition: service_healthy
+      - auth
+    restart: unless-stopped
 
+  # ─────────────────────────────────────────────
+  # AUTH SERVICE
+  # ─────────────────────────────────────────────
+  auth:
+    build:
+      context: ./services/auth
+      dockerfile: Dockerfile
+    container_name: auth
+    ports:
+      - "8001:8000"                    # Access in browser: http://localhost:8001
+    volumes:
+      - ./services/auth:/app           # Hot-reload during development
     environment:
-      - API_HOST=app
-    networks:
-      - pokemon_net
+      - PYTHONUNBUFFERED=1
+      - AUTH_PORT=8000
+      - POKEMON_SERVICE_URL=http://pokemon-api:8000   # ← How auth talks to pokemon-api
+      # Example Azure SQL connection (uncomment and fill when ready)
+      # - DATABASE_URL=postgresql+psycopg2://user:password@your-azure-sql-server.database.windows.net:5432/dbname?sslmode=require
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
 
-    profiles:
-      - testing
+  # ─────────────────────────────────────────────
+  # OPTIONAL: Local PostgreSQL for testing
+  # (uncomment the whole block when you want a local DB)
+  # ─────────────────────────────────────────────
+  # postgres:
+  #   image: postgres:16-alpine
+  #   container_name: postgres
+  #   environment:
+  #     POSTGRES_USER: dev
+  #     POSTGRES_PASSWORD: devpassword
+  #     POSTGRES_DB: pokemon_db
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U dev"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 5
 
-networks:
-  pokemon_net:
-    driver: bridge
-
-volumes:
-  sql_data:
+# volumes:
+#   postgres_data:
