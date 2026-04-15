@@ -1,0 +1,71 @@
+services:
+  db:
+  # Using the official Microsoft SQL Server image for Linux
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: pokemon_sql_server
+    platform: linux/amd64
+    # Expose SQL Server's default port to the host machine
+    ports:
+      - "1433:1433"
+      # Set environment variables for SQL Server configuration
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${SQL_PASSWORD}
+    volumes:
+    # Mount a named volume to persist SQL Server data across container restarts
+      - sql_data:/var/opt/mssql # Persistent volume
+    networks:
+      - pokemon_net
+
+  app:
+  # Build the application image using the Dockerfile in the current directory
+    build: .
+    container_name: pokemon_app
+    depends_on:
+      - db
+    env_file:
+      - .env
+    # Expose the FastAPI app on port 8000
+    ports:
+      - "8000:8000" # Expose the FastAPI app on port 8000
+
+    # Command to run the FastAPI application using Uvicorn, with hot reload enabled for development
+    command: uvicorn app.server:app --host 0.0.0.0 --port 8000 --reload
+
+    volumes:
+      - .:/app # Mount the current directory to /app in the container for development
+
+    networks:
+      - pokemon_net
+    
+    healthcheck:
+      # We use Python's built-in urllib so we don't have to install 'curl' in your Dockerfile
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
+      interval: 5s       # Time between pings
+      timeout: 5s        # Time to wait for a response
+      retries: 15        # How many times to try before giving up
+      start_period: 15s  # Give the DB time to boot before we start counting failures
+
+  integration-test:
+    build: .
+    container_name: pokemon_test
+    
+    command: python tests/test_api.py
+    depends_on:
+      app:
+        condition: service_healthy
+
+    environment:
+      - API_HOST=app
+    networks:
+      - pokemon_net
+
+    profiles:
+      - testing
+
+networks:
+  pokemon_net:
+    driver: bridge
+
+volumes:
+  sql_data:

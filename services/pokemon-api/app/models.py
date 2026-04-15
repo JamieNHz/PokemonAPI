@@ -1,0 +1,139 @@
+#models.py start
+class Pokemon:
+    def __init__(self, data, evo_data = None, gen=None):
+        if gen: # Only check if a generation was actually provided
+            if not self.check_gen(data["moves"], gen):
+                raise ValueError(f"{data['name'].capitalize()} does not exist in {gen}, please check your team and try again.")
+
+        # 1. Basic Info
+        self.name = data["name"].capitalize()
+        self.id = data["id"]
+        #self.gen = gen
+        self.types = [t["type"]["name"] for t in data["types"]]
+        self.forms = [f["name"] for f in data["forms"]]
+        self.abilities = [a["ability"]["name"] for a in data["abilities"]]
+        # 2. Extract Types (into a simple list of strings)
+       
+        self.gen = gen  
+        current_stage = evo_data["chain"]
+        self.evolution_line = []
+        while current_stage:
+            name = current_stage["species"]["name"].capitalize()
+            
+            # We check if details exist (the first pokemon has None/Empty)
+            details = current_stage["evolution_details"]
+            
+            if details:
+                det = details[0]
+                trigger = det["trigger"]["name"]
+                if trigger == "level-up" and det["min_level"]:
+                    self.evolution_line.append(f"{name} (Lvl {det['min_level']})")
+                    
+                elif trigger == "use-item":
+                        item = det["item"]["name"].replace("-", " ").title()
+                        self.evolution_line.append(f"{name} ({item})")
+
+                elif trigger == "trade":
+                        self.evolution_line.append(f"{name} (Trade)")
+            else:
+                self.evolution_line.append(name)
+
+            if current_stage['evolves_to']:
+
+                current_stage = current_stage["evolves_to"][0]
+            else:
+
+                current_stage = None
+        
+        # 3. Extract Abilities
+        
+        
+        # 4. Extract Level-Up Moves (specifically for Red-Blue as an example)
+        self.moves = []
+        for m in data["moves"]:
+            for detail in m["version_group_details"]:
+                if (detail["move_learn_method"]["name"] == "level-up" and 
+                    detail["version_group"]["name"] == gen and
+                    detail["level_learned_at"] > 1):
+                    self.moves.append({
+                        "name": m["move"]["name"],
+                        "level": detail["level_learned_at"]
+                    })
+        
+        # Sort moves by level
+        self.moves.sort(key=lambda x: x["level"])
+        
+    """
+    def display_info(self):
+        print(f"\n{'='*30}")
+        print(f"#{self.id:03} : {self.name}")
+        print(f"Type: {' / '.join(self.types).title()}")
+        print(f"Forms: {' / '.join(self.forms).title()}")
+        print(f"Evolutions: { ' -> ' .join(self.evolution_line)}")
+        print(f"Abilities: {', '.join(self.abilities).title()}")
+        print("-" * 30)
+        print(f"Moves ({self.gen} Level-up):")
+        for move in self.moves:
+            print(f" Lvl {move['level']:>2} - {move['name'].title()}")
+        print(f"{'='*30}\n")
+    """
+    def to_dict(self):
+        # This function converts the pokemon object into a dictionary format.
+        return {
+            "name": self.name,
+            "id": self.id,
+            "types": self.types,
+            "forms": self.forms,
+            "evolution_line": self.evolution_line,
+            "abilities": self.abilities,
+            "moves": self.moves
+        }
+    # This method is for checking whether the pokemon exists within this generation
+    def check_gen(self, moves_data, target_gen):
+        return any(
+            group["version_group"]["name"] == target_gen
+            for move in moves_data
+            for group in move["version_group_details"]
+        )
+
+class Team:
+    def __init__(self, name, gen):
+          self.name = name
+          self.gen = gen
+          self.members = [] # List to hold all pokemon in the team
+          self.max_size = 6
+    def add_pokemon(self, pokemon, first_add=True):
+         #adds a pokemon as long as team isn't full
+        if len(self.members) < self.max_size:
+              self.members.append(pokemon)
+              if first_add:
+                print(f"{pokemon.name} has been added to {self.name}")
+              return True
+        else:
+            print(f"{self.name} is already full, please remove, or swap an existing pokemon")
+            return False
+
+    def display_team(self):
+        #Displaying full team, including name, and pokemon type
+        print(f"\n{'='*30}")
+        print(f"🏆 {self.name.upper()} 🏆")
+        print(f"Generation: {self.gen}")
+        print(f"{'='*30}")
+
+        if not self.members:
+             print("Your team is currently empty")
+             return
+        
+        for i, pkmn in enumerate(self.members, 1):
+             print(f"{i}: {pkmn.name} | Type: {'/'.join(pkmn.types).title()}")
+        print(f"{'='*30}\n")
+
+    # This function converst the team object into a dictionary format.
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "generation": self.gen,
+            # Loop through the objects and turn them into dictionaries too!
+            "members": [pokemon.to_dict() for pokemon in self.members] 
+        }
+#models ends here
