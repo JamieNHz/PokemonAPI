@@ -59,3 +59,8 @@ def login_user(user: UserCredentials, repo: PokemonRepository = Depends(get_repo
         
     access_token = create_access_token(data={"sub": str(db_user_id)})
     return {"access_token": access_token, "token_type": "bearer"}
+
+@app.get("/health")
+def health_check():
+    """Docker Compose uses this to verify the container is running."""
+    return {"status": "healthy"}

@@ -78,3 +78,8 @@ def get_team(current_user_id: int = Depends(get_current_user), repo: PokemonRepo
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
     return {"team": team}
+
+@app.get("/health")
+def health_check():
+    """Docker Compose uses this to verify the container is running."""
+    return {"status": "healthy"}
