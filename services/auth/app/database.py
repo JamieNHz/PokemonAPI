@@ -1,11 +1,7 @@
 # database.py start
-from app.schemas import TeamSchema
 import pyodbc
 import time
 import os
-from app.models import Team, Pokemon
-from app.pokemon_api import get_pokemon_evo, get_pokemon_info
-from app.services import build_pokemon_schema
 from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
@@ -133,89 +129,5 @@ class PokemonRepository:
 
     # Method to retrieve a user's team from the database
 
-    def get_team_by_user(self, userID):
-        cursor = self.conn.cursor()
-
-        team_data = []
-        rehydrated_team = [] # Initialize rehydrated_team to an empty list in case of errors or no team found
-        try:
-            cursor.execute("""
-                SELECT t.TeamID, t.TeamName, t.Generation, tm.PokeApiID, tm.SlotNumber
-                FROM Teams t
-                JOIN TeamMembers tm ON t.TeamID = tm.TeamID
-                WHERE t.UserID = ?
-            """, (userID,))
-            team_data = cursor.fetchall()
-            if team_data:
-                rehydrated_team = self.rehydrate_team(team_data)
-        except Exception as e:
-            print(f"Error retrieving team from database: {e}")
-        finally:
-            cursor.close()
-        return rehydrated_team
-    
-    # Method to add a team to the database for a specific user
-    
-    def add_team(self, userID, team_object):
-        cursor = self.conn.cursor()
-        try:
-            cursor.execute("""
-                INSERT INTO Teams (UserID, TeamName, Generation) 
-                OUTPUT INSERTED.TeamID 
-                VALUES (?, ?, ?)
-            """, (userID, team_object.name, team_object.generation))
-
-            team_id = cursor.fetchone()[0]  # Get the generated TeamID
-
-            for idx, pokemon in enumerate(team_object.members):
-                cursor.execute("""INSERT INTO TeamMembers (TeamID, PokeApiID, SlotNumber)
-                                VALUES (?, ?, ?)
-                               """, (team_id, pokemon.id, idx + 1))
-
-            
-            self.conn.commit()
-            
-            print(f"Team '{team_object.name}' added successfully for user ID {userID}!")
-        
-        # In case of any error during the insertion process, we catch the exception, print an error message, and roll back the transaction to maintain database integrity
-        except Exception as e:
-            print(f"Error adding team to database: {e}")
-            self.conn.rollback()
-            
-
-        finally:
-            cursor.close()
-
-   
-    def rehydrate_team(self, team_data):
-        # This function takes raw team data from the database and converts it back into a Team object
-        if not team_data:
-            return None 
-
-        team_name = team_data[0][1] 
-        team_gen = team_data[0][2] 
-        
-        pokemon_members = []
-
-        for row in team_data:
-            # Each row contains: TeamID, TeamName, Generation, PokeApiID, SlotNumber
-            poke_id = row[3]
-            
-            # Fetch fresh data from the API
-            pokemon_info = get_pokemon_info(poke_id)
-            pokemon_evo = get_pokemon_evo(pokemon_info["species"]["url"])
-            
-            # Build the immutable Pydantic schema using our service
-            poke_schema = build_pokemon_schema(pokemon_info, pokemon_evo, team_gen)
-            pokemon_members.append(poke_schema)
-
-        # Stamp out the final immutable team object
-        team = TeamSchema(
-            name=team_name,
-            generation=team_gen,
-            members=pokemon_members
-        )
-        
-        return team
     
 # 
