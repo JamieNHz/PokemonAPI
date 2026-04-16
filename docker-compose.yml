@@ -16,10 +16,11 @@ services:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=${SQL_PASSWORD} # <-- Fixed syntax
     healthcheck:
-      test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-U", "sa", "-P", "${SQL_PASSWORD}", "-Q", "SELECT 1"]
-      interval: 5s
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/1433'"]
+      interval: 10s
       timeout: 3s
-      retries: 10
+      retries: 5
+      start_period: 30s
     restart: unless-stopped
 
   # ─────────────────────────────────────────────
