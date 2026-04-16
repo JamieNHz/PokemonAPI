@@ -3,17 +3,17 @@ from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordBearer
 import jwt
 from pydantic import BaseModel
-from database import PokemonRepository, get_db_connection
-from pokemon_api import get_pokemon_info, get_pokemon_gen, get_pokemon_evo
-from services import build_pokemon_schema, is_pokemon_in_generation
-from schemas import TeamSchema, TeamCreate
+from app.database import PokemonRepository, get_db_connection
+from app.pokemon_api import get_pokemon_info, get_pokemon_gen, get_pokemon_evo
+from app.services import build_pokemon_schema, is_pokemon_in_generation
+from app.schemas import TeamSchema, TeamCreate
 
 # Must match Auth service exactly
-SECRET_KEY = os.environ("SECRET_KEY")
-ALGORITHM = os.environ("ALGORITHM")
+SECRET_KEY = os.environ["SECRET_KEY"]
+ALGORITHM = os.environ["ALGORITHM"]
 
 # Note: The tokenUrl doesn't strictly matter here, it's just for the Swagger UI
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="http://localhost:8001/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="http://auth:8000/login")
 
 app = FastAPI(title="Pokemon Domain API")
 

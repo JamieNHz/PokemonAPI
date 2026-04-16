@@ -1,8 +1,8 @@
 from fastapi import FastAPI, HTTPException, status, Depends
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
-from database import PokemonRepository, get_db_connection, intialize_db
-from auth import hash_password, verify_password, create_access_token
+from app.database import PokemonRepository, get_db_connection, intialize_db
+from app.auth import hash_password, verify_password, create_access_token
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
