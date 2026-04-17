@@ -25,7 +25,7 @@ def get_pokemon_evo(url):
         print(f"Failed to retrieve data {species_request.status_code}")
 
 def get_pokemon_gen():
-    url = f"{base_url}/version-group/?limit=20"
+    url = f"{base_url}/version-group/?limit=40"
     all_groups = [] # This is where we will store every result
 
     while url:
