@@ -1,71 +1,69 @@
-# ⚡️ Pokémon Team Builder API
+# ⚡️ Pokémon Team Builder Microservices
 
-A fully containerized, RESTful API built with **FastAPI** and **SQL Server**. This backend service allows users to securely register, authenticate via JWT, and build custom Pokémon teams that are validated in real-time against the public PokéAPI.
+A fully containerized, microservices-based application built with FastAPI, NGINX, and SQL Server. This infrastructure allows users to securely register, authenticate via JWT, and build custom Pokémon teams that are validated in real-time against the public PokéAPI.
 
 ## 🚀 Developer Highlights
-This project was built with a focus on modern backend architecture, security, and zero-dependency deployment:
-- **Two-Tier Architecture:** Complete separation of concerns between the application logic (FastAPI) and the data layer (Microsoft SQL Server), orchestrated via Docker Compose.
-- **Robust Security:** Implements JWT (JSON Web Token) authentication with bcrypt password hashing. Routes are protected via dependency injection ("Bouncer" pattern).
-- **Data Validation:** Utilizes Pydantic models for strict, fail-fast request payload validation, preventing malformed data from ever hitting the application logic.
-- **External API Orchestration:** Dynamically communicates with the external PokéAPI to validate Pokémon existence and game-generation legality before saving to the database.
-- **Containerized Testing:** Includes a fully isolated, containerized integration test suite that tests the entire user lifecycle without requiring local Python environments.
+
+This project was refactored from a monolith into a production-grade microservice network with a focus on modern infrastructure, security, and zero-dependency deployment:
+
+* **Three-Tier Architecture:** Complete network segmentation. A public-facing NGINX API Gateway routes traffic to private Python backend services, which alone hold the keys to the isolated Microsoft SQL database.
+* **Microservice Decoupling:** Identity management (Auth) and domain logic (Pokémon) are completely physically separated into independent containers that scale and fail independently.
+* **Robust Security:** Implements stateless JWT authentication. The Auth service issues tokens, and the Pokémon service validates the cryptographic signatures locally without requiring cross-container chatter.
+* **Data Validation:** Utilizes Pydantic models for strict, fail-fast request payload validation, preventing malformed data from ever hitting the application logic.
+* **External API Orchestration:** Dynamically communicates with the external PokéAPI to validate Pokémon existence and game-generation legality before committing to the database.
 
 ## 🛠 Tech Stack
-* **Framework:** FastAPI (Python)
-* **Database:** Microsoft SQL Server (Dockerized)
+
+* **API Gateway & Frontend:** NGINX
+* **Application Backend:** FastAPI (Python 3.11)
+* **Database:** Microsoft Azure SQL Edge (Dockerized)
 * **Authentication:** PyJWT & passlib (bcrypt)
 * **Infrastructure:** Docker & Docker Compose
-* **External Integrations:** PokéAPI
 
 ## 📦 Quick Start (Zero-Dependency Setup)
 
-**Prerequisites:** You must have [Docker Desktop](https://www.docker.com/products/docker-desktop) installed and running. No local Python installation is required.
+**Prerequisites:** You must have Docker Desktop installed and running. No local Python installation is required.
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/JamieNHZ/PokemonAPI.git
-   cd PokemonAPI
-   ```
+1.  **Clone the repository:**
+    ```bash
+    git clone [https://github.com/JamieNHZ/PokemonAPI.git](https://github.com/JamieNHZ/PokemonAPI.git)
+    cd PokemonAPI
+    ```
 
-2. **Set up your environment variables:**
-   Copy the example environment file to create your active `.env` file:
-   ```bash
-   cp .env.example .env
-   ```
+2.  **Set up your environment variables:**
+    Copy the example environment file to create your active `.env` file, ensuring `SQL_PASSWORD` meets Microsoft's strict complexity requirements:
+    ```bash
+    cp .env.example .env
+    ```
 
-3. **Spin up the backend:**
-   ```bash
-   docker-compose up --build -d
-   ```
+3.  **Spin up the infrastructure:**
+    ```bash
+    docker-compose up --build -d
+    ```
 
-4. **Explore the API:**
-   The API will be live at `http://localhost:8000`. 
-   FastAPI automatically generates interactive Swagger UI documentation. Visit:
-   👉 **[http://localhost:8000/docs](http://localhost:8000/docs)**
+4.  **Explore the Network:**
+    The NGINX Gateway is now live on port 80.
+    * **Frontend UI:** `http://localhost/`
+    * **Auth API Swagger:** `http://localhost:8001/docs`
+    * **Pokémon API Swagger:** `http://localhost:8000/docs`
 
-## 🧪 Running the Integration Tests
+## 📡 Core Endpoints (Routed via NGINX Gateway)
 
-This project includes a fully containerized integration test script (`test_api.py`) that simulates a complete user journey (Register ➔ Login ➔ Extract JWT ➔ Create Team ➔ Fetch Team).
+* **POST `/api/auth/register`**
+    * **Description:** Creates a new user in the SQL database.
+    * **Auth Required:** No
 
-To run the automated test suite against the live Docker network, open your terminal and run:
+* **POST `/api/auth/login`**
+    * **Description:** Verifies credentials against the database and returns a JWT access token.
+    * **Auth Required:** No
 
-```bash
-docker-compose --profile testing run --rm integration-test
-```
-*(This command spins up a temporary test container, executes the HTTP requests against the API, prints the JSON responses, and cleanly deletes itself upon completion.)*
+* **POST `/api/team/`**
+    * **Description:** Validates and saves a new Pokémon team to the database.
+    * **Auth Required:** Yes (Requires Bearer JWT)
 
-## 📡 Core Endpoints
-
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| `POST` | `/register` | Creates a new user in the SQL database. | No |
-| `POST` | `/login` | Verifies credentials and returns a JWT access token. | No |
-| `POST` | `/team` | Validates and saves a new Pokémon team to the database. | **Yes** |
-| `GET`  | `/team` | Retrieves the authenticated user's saved team. | **Yes** |
-
-## 🏗️ Architecture & Development Roadmap
-
-This project is actively evolving from a standalone CLI tool into a fully containerized, production-ready microservice. Below is the phased implementation plan focusing on Site Reliability Engineering (SRE) and scalable architecture principles.
+* **GET `/api/team/`**
+    * **Description:** Retrieves the authenticated user's saved team.
+    * **Auth Required:** Yes (Requires Bearer JWT)
 
 ### Phase 1: Container Foundation
 - [x] Add `Dockerfile` for the core Python application.
@@ -82,20 +80,18 @@ This project is actively evolving from a standalone CLI tool into a fully contai
 ### Phase 3: Authentication & Security
 - [x] Implement password hashing (bcrypt/argon2).
 - [x] Create secure user registration and login endpoints.
-- [x] Implement JWT generation and validation middleware.
-- [x] Protect specific Pokémon data routes with required authentication.
-
+- [x] Implement JWT generation and validation middleware.  - [x] Protect specific Pokémon data routes with required authentication.
 ### Phase 4: Domain & Data Handling
-- [ ] Create immutable domain models (User, Pokemon).
+- [x] Create immutable domain models (User, Pokemon).
 - [ ] Implement data transformation logic (mapping over manual loops).
 - [ ] Architect data isolation (store and retrieve Pokémon data strictly per user).
 
 ### Phase 5: Production Level Improvements
 - [ ] Implement structured logging for observability.
-- [ ] Build application health check endpoints (SLI monitoring).
-- [ ] Add native Docker healthchecks.
+- [x] Build application health check endpoints (SLI monitoring).
+- [x] Add native Docker healthchecks.
 - [ ] Implement a robust, global error handling strategy.
-- [ ] Build a basic CI pipeline for automated building and testing.
+- [x] Build a basic CI pipeline for automated building and testing.
 
 ### 🚀 Optional Stretch Goals (Scaling)
 - [ ] Integrate a Redis container for rapid data caching.
