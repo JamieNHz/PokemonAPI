@@ -3,13 +3,27 @@ version: '3.9'
 services:
 
   # ─────────────────────────────────────────────
+  # TIER 1: API GATEWAY & FRONTEND (NGINX)
+  # ─────────────────────────────────────────────
+  api-gateway:
+    image: nginx:alpine
+    container_name: api-gateway
+    ports:
+      - "80:80"                        # The ONLY public port. Access at http://localhost
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/frontend:/usr/share/nginx/html:ro
+    depends_on:
+      - auth
+      - pokemon-api
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────
   # LOCAL SQL DATABASE
   # ─────────────────────────────────────────────
   sql-server:
     image: mcr.microsoft.com/azure-sql-edge
     container_name: sql-server
-    ports:
-      - "1433:1433"
     volumes:
       - sql_data:/var/opt/mssql
     environment:
@@ -66,8 +80,6 @@ services:
       context: ./services/auth
       dockerfile: Dockerfile
     container_name: auth
-    ports:
-      - "8001:8000"
     volumes:
       - ./services/auth:/app
     env_file:
