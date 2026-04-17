@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon Team Builder - Infrastructure Test</title>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; background-color: #f4f4f5; padding: 2rem; max-width: 800px; margin: 0 auto; }
+        .card { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); margin-bottom: 1.5rem; }
+        h2 { margin-top: 0; color: #18181b; font-size: 1.2rem;}
+        input { display: block; width: 100%; padding: 0.5rem; margin-bottom: 1rem; border: 1px solid #d4d4d8; border-radius: 4px; box-sizing: border-box; }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        button { background: #2563eb; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #1d4ed8; }
+        pre { background: #18181b; color: #10b981; padding: 1rem; border-radius: 4px; overflow-x: auto; font-size: 0.9rem; }
+        .token-display { word-break: break-all; font-family: monospace; background: #f3f4f6; padding: 0.5rem; border: 1px dashed #9ca3af; margin-top: 1rem; }
+    </style>
+</head>
+<body>
+
+    <h1>Three-Tier Architecture Test</h1>
+    <p>This UI communicates exclusively with the NGINX Gateway on Port 80.</p>
+
+    <div class="card">
+        <h2>1. Identity Provider (Auth Service)</h2>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        
+        <button onclick="registerUser()">Register</button>
+        <button onclick="loginUser()" style="background-color: #059669;">Login</button>
+
+        <div id="tokenContainer" style="display: none;">
+            <p style="font-size: 0.8rem; font-weight: bold; margin-bottom: 0;">Active JWT Token:</p>
+            <div id="tokenDisplay" class="token-display">None</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>2. Build Your Team (Pokémon Service)</h2>
+        <p style="font-size: 0.8rem; color: #6b7280;">Enter up to 6 Pokémon names. Leave slots blank if you want a smaller team.</p>
+        
+        <datalist id="common-pokemon">
+            <option value="pikachu"></option>
+            <option value="charizard"></option>
+            <option value="bulbasaur"></option>
+            <option value="squirtle"></option>
+            <option value="gengar"></option>
+            <option value="snorlax"></option>
+        </datalist>
+
+        <div class="row" style="margin-bottom: 1rem;">
+            <input type="text" id="teamName" placeholder="Team Name (e.g., Kanto Squad)">
+            <div class="row" style="margin-bottom: 1rem;">
+            <select id="generation">
+                <option value="" disabled selected>Select Generation...</option>
+                <option value="red-blue">red-blue</option>
+                <option value="yellow">yellow</option>
+                <option value="gold-silver">gold-silver</option>
+                <option value="crystal">crystal</option>
+                <option value="ruby-sapphire">ruby-sapphire</option>
+                <option value="emerald">emerald</option>
+                <option value="firered-leafgreen">firered-leafgreen</option>
+                <option value="diamond-pearl">diamond-pearl</option>
+                <option value="platinum">platinum</option>
+                <option value="heartgold-soulsilver">heartgold-soulsilver</option>
+                <option value="black-white">black-white</option>
+                <option value="colosseum">colosseum</option>
+                <option value="xd">xd</option>
+                <option value="black-2-white-2">black-2-white-2</option>
+                <option value="x-y">x-y</option>
+                <option value="omega-ruby-alpha-sapphire">omega-ruby-alpha-sapphire</option>
+                <option value="sun-moon">sun-moon</option>
+                <option value="ultra-sun-ultra-moon">ultra-sun-ultra-moon</option>
+                <option value="lets-go-pikachu-lets-go-eevee">lets-go-pikachu-lets-go-eevee</option>
+                <option value="sword-shield">sword-shield</option>
+                <option value="the-isle-of-armor">the-isle-of-armor</option>
+                <option value="the-crown-tundra">the-crown-tundra</option>
+                <option value="brilliant-diamond-shining-pearl">brilliant-diamond-shining-pearl</option>
+                <option value="legends-arceus">legends-arceus</option>
+                <option value="scarlet-violet">scarlet-violet</option>
+                <option value="the-teal-mask">the-teal-mask</option>
+                <option value="the-indigo-disk">the-indigo-disk</option>
+                <option value="red-green-japan">red-green-japan</option>
+                <option value="blue-japan">blue-japan</option>
+                <option value="legends-za">legends-za</option>
+                <option value="mega-dimension">mega-dimension</option>
+                <option value="champions">champions</option>
+            </select>
+        </div>
+        </div>
+
+        <div class="row">
+            <input type="text" id="poke1" list="common-pokemon" placeholder="Slot 1 (e.g., pikachu)">
+            <input type="text" id="poke2" list="common-pokemon" placeholder="Slot 2">
+            <input type="text" id="poke3" list="common-pokemon" placeholder="Slot 3">
+            <input type="text" id="poke4" list="common-pokemon" placeholder="Slot 4">
+            <input type="text" id="poke5" list="common-pokemon" placeholder="Slot 5">
+            <input type="text" id="poke6" list="common-pokemon" placeholder="Slot 6">
+        </div>
+        
+        <button onclick="saveTeam()" style="background-color: #7c3aed;">Save Team to Database</button>
+    </div>
+
+    <div class="card">
+        <h2>3. Retrieve Your Data (Pokémon Service)</h2>
+        <button onclick="fetchTeam()">Get My Saved Team</button>
+    </div>
+
+    <div class="card">
+        <h2>Gateway Response Logs</h2>
+        <pre id="logOutput">Awaiting network activity...</pre>
+    </div>
+
+    <script>
+        let activeToken = null;
+
+        function logResponse(route, status, data) {
+            const logBox = document.getElementById('logOutput');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] Route: ${route} | Status: ${status}\n${JSON.stringify(data, null, 2)}\n\n`;
+            logBox.textContent = logEntry + (logBox.textContent === 'Awaiting network activity...' ? '' : logBox.textContent);
+        }
+
+        async function registerUser() {
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+            const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: u, password: p })
+            });
+            const data = await response.json();
+            logResponse('/api/auth/register', response.status, data);
+        }
+
+        async function loginUser() {
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: u, password: p })
+            });
+            const data = await response.json();
+            logResponse('/api/auth/login', response.status, data);
+
+            if (response.ok && data.access_token) {
+                activeToken = data.access_token;
+                document.getElementById('tokenContainer').style.display = 'block';
+                document.getElementById('tokenDisplay').textContent = activeToken;
+            }
+        }
+
+        // --- NEW POST REQUEST TO SAVE TEAM ---
+        async function saveTeam() {
+            if (!activeToken) {
+                logResponse('Local UI', 401, { error: "Missing JWT Token. Please log in first." });
+                return;
+            }
+
+            // 1. Gather the strict Pydantic requirements
+            const tName = document.getElementById('teamName').value.trim() || "Test Team";
+            const gen = document.getElementById('generation').value;
+            
+            // NEW FAIL-FAST VALIDATION
+            if (!gen) {
+                logResponse('Local UI', 400, { error: "You must select a Generation." });
+                return;
+            }
+            
+            const teamRoster = [];
+            for (let i = 1; i <= 6; i++) {
+                const val = document.getElementById('poke' + i).value.trim().toLowerCase();
+                if (val) teamRoster.push(val);
+            }
+
+            if (teamRoster.length === 0) {
+                logResponse('Local UI', 400, { error: "You must enter at least one Pokémon." });
+                return;
+            }
+
+            // 2. Construct the exact JSON object matching TeamCreate
+            const payload = {
+                team_name: tName,
+                generation: gen,
+                pokemon_names: teamRoster
+            };
+
+            // 3. Fix the URL Routing
+            // IMPORTANT: If your FastAPI endpoint is @app.post("/team"), this URL MUST be '/api/team/team'
+            // If your FastAPI endpoint is @app.post("/"), this URL should remain '/api/team/'
+            const endpointUrl = '/api/team/team'; 
+
+            const response = await fetch(endpointUrl, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${activeToken}`
+                },
+                body: JSON.stringify(payload)
+            });
+            
+            const data = await response.json();
+            logResponse(endpointUrl + ' (POST)', response.status, data);
+        }
+
+       async function fetchTeam() {
+            const headers = { 'Content-Type': 'application/json' };
+            
+            if (activeToken) {
+                headers['Authorization'] = `Bearer ${activeToken}`;
+            }
+
+            // Fix: Change '/api/team/' to '/api/team/team' to survive the NGINX strip
+            const endpointUrl = '/api/team/team';
+
+            const response = await fetch(endpointUrl, {
+                method: 'GET',
+                headers: headers
+            });
+            
+            const data = await response.json();
+            logResponse(endpointUrl + ' (GET)', response.status, data);
+        }
+        
+    </script>
+</body>
+</html>
