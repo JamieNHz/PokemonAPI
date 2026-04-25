@@ -19,20 +19,25 @@ services:
     restart: unless-stopped
 
   # ─────────────────────────────────────────────
-  # LOCAL SQL DATABASE
+  # AUTH SERVICE
   # ─────────────────────────────────────────────
-  sql-server:
-    image: mcr.microsoft.com/azure-sql-edge
-    container_name: sql-server
+  auth:
+    build:
+      context: ./services/auth
+      dockerfile: Dockerfile
+    container_name: auth
     volumes:
-      - sql_data:/var/opt/mssql
+      - ./services/auth:/app
+    env_file:
+      - ./.env # <-- Pulls SECRET_KEY, ALGORITHM, etc., from your root file
     environment:
-      - ACCEPT_EULA=Y
-      - SA_PASSWORD=${SQL_PASSWORD} # <-- Fixed syntax
+      - PYTHONUNBUFFERED=1
+      - AUTH_PORT=8000
+      - POKEMON_SERVICE_URL=http://pokemon-api:8000
     healthcheck:
-      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/1433'"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 10s
-      timeout: 3s
+      timeout: 5s
       retries: 5
       start_period: 30s
     restart: unless-stopped
@@ -55,10 +60,6 @@ services:
       - PYTHONUNBUFFERED=1
       - POKEMON_PORT=8000
       - AUTH_SERVICE_URL=http://auth:8000
-      - SQL_SERVER=sql-server # <-- Docker's internal DNS routes this to the DB container
-      - SQL_USER=sa
-      - SQL_PASSWORD=${SQL_PASSWORD}
-      - SQL_DATABASE=$(SQL_DATABASE)
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 10s
@@ -66,45 +67,9 @@ services:
       retries: 5
       start_period: 10s
     depends_on:
-      sql-server:
-        condition: service_healthy
       auth:
-        condition: service_started
-    restart: unless-stopped
-
-  # ─────────────────────────────────────────────
-  # AUTH SERVICE
-  # ─────────────────────────────────────────────
-  auth:
-    build:
-      context: ./services/auth
-      dockerfile: Dockerfile
-    container_name: auth
-    volumes:
-      - ./services/auth:/app
-    env_file:
-      - ./.env # <-- Pulls SECRET_KEY, ALGORITHM, etc., from your root file
-    environment:
-      - PYTHONUNBUFFERED=1
-      - AUTH_PORT=8000
-      - POKEMON_SERVICE_URL=http://pokemon-api:8000
-      - SQL_SERVER=sql-server # <-- Points to the local DB container
-      - SQL_USER=sa
-      - SQL_PASSWORD=${SQL_PASSWORD}
-      - SQL_DATABASE=$(SQL_DATABASE) # <-- Use the same DB for simplicity
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-    depends_on:
-      sql-server:
         condition: service_healthy
     restart: unless-stopped
 
-# ─────────────────────────────────────────────
-# TOP-LEVEL VOLUMES (Required)
-# ─────────────────────────────────────────────
-volumes:
-  sql_data:
+
+
