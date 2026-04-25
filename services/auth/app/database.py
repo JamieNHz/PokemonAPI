@@ -8,7 +8,6 @@ load_dotenv()
 
 # Retrieve database connection details from environment variables
 server = os.getenv("SQL_SERVER")
-database = os.getenv("SQL_PASSWORD")
 
 def get_db_connection(target_db="master"):
     # Pull credentials from the .env variables Docker provides
@@ -16,8 +15,6 @@ def get_db_connection(target_db="master"):
         f"DRIVER={{ODBC Driver 18 for SQL Server}};"
         f"SERVER={os.getenv('SQL_SERVER')};"
         f"DATABASE={target_db};"
-        f"UID={os.getenv('SQL_USER')};"
-        f"PWD={os.getenv('SQL_PASSWORD')};"
         "Encrypt=yes;" # Standard for Driver 18
         "TrustServerCertificate=yes;" # This bypasses the error you see
     )
