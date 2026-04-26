@@ -32,6 +32,7 @@ services:
       - ./.env # <-- Pulls SECRET_KEY, ALGORITHM, etc., from your root file
     environment:
       - PYTHONUNBUFFERED=1
+      - DATABASE_URL=${DATABASE_URL}
       - AUTH_PORT=8000
       - POKEMON_SERVICE_URL=http://pokemon-api:8000
     healthcheck:
