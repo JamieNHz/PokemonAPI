@@ -1,5 +1,8 @@
 # database.py start
-import pyodbc
+from sqlalchemy import create_engine
+from sqlalchemy.exc import OperationalError
+from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 import time
 import os
 from dotenv import load_dotenv
@@ -7,86 +10,84 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Retrieve database connection details from environment variables
-server = os.getenv("SQL_SERVER")
+server = os.getenv("DATABASE_URL")
 
-def get_db_connection(target_db="master"):
-    # Pull credentials from the .env variables Docker provides
-    connection_string = (
-        f"DRIVER={{ODBC Driver 18 for SQL Server}};"
-        f"SERVER={os.getenv('SQL_SERVER')};"
-        f"DATABASE={target_db};"
-        "Encrypt=yes;" # Standard for Driver 18
-        "TrustServerCertificate=yes;" # This bypasses the error you see
-    )
-    # Implementing a retry mechanism to handle potential connection issues when the SQL Server container is still starting up
+def get_db_connection():
+    # Pull the perfectly formatted URI from your .env
+    database_url = os.getenv("DATABASE_URL")
+    
+    # Let SQLAlchemy do the heavy lifting of parsing the string
+    engine = create_engine(database_url, echo=True)
+    
     max_retries = 6
-    retry_delay = 10  # Seconds to wait between attempts
+    retry_delay = 10 
 
     for attempt in range(1, max_retries + 1):
         try:
-            print(f"Connecting to SQL Server (Attempt {attempt}/{max_retries})...")
-            conn = pyodbc.connect(connection_string)
-            print("Successfully connected to SQL Server!")
-            
-            return conn
-        except Exception as e:
+            print(f"Connecting to Azure SQL via SQLAlchemy (Attempt {attempt}/{max_retries})...")
+            # Attempt a raw connection to test the network
+            with engine.connect() as conn:
+                print("Successfully connected to Azure SQL!")
+                return engine
+        except OperationalError as e:
             print(f"SQL Not ready yet: {e}")
             time.sleep(retry_delay)
     
-    print("Could not connect to SQL Server after multiple attempts. Please check your Docker setup and ensure the SQL Server container is running.")
+    print("Could not connect to Azure SQL. Check your firewall and credentials.")
     return None
 
-def intialize_db(conn):
-    # Create the database if it doesn't exist and set up the connection to use it
-    cursor = conn.cursor()
-    # We need to temporarily enable autocommit to create the database, then switch back to manual commit mode
-    conn.autocommit = True
-    cursor.execute("IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'PokemonDB') BEGIN CREATE DATABASE PokemonDB END")
-    # After creating the database, we can switch back to manual commit mode for our operations
-    conn.autocommit = False
+def initialize_db(engine):
+    # Populating SQL database with table schema for first run
+    try:
+        # SQLAlchemy manages the connection pool context
+        with engine.connect() as connection:
+            
+            # Create Users table
+            connection.execute(text("""
+                IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Users]') AND type in (N'U'))
+                BEGIN
+                    CREATE TABLE Users (
+                        UserID INT PRIMARY KEY IDENTITY(1,1),
+                        Username NVARCHAR(50) UNIQUE NOT NULL,
+                        PasswordHash VARBINARY(MAX) NOT NULL,
+                        CreatedAt DATETIME DEFAULT GETDATE()
+                    )
+                END
+            """))
+            
+            # Create Teams table
+            connection.execute(text("""
+                IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Teams]') AND type in (N'U'))
+                BEGIN
+                    CREATE TABLE Teams (
+                        TeamID INT PRIMARY KEY IDENTITY(1,1),
+                        UserID INT FOREIGN KEY REFERENCES Users(UserID) ON DELETE CASCADE,
+                        TeamName NVARCHAR(100),
+                        Generation NVARCHAR(50),
+                        CreatedAt DATETIME DEFAULT GETDATE()
+                    )
+                END
+            """))
 
-    # Now we can switch to using the new database for our operations
-    cursor.execute("USE PokemonDB")
-    # Create the Users table if it doesn't exist
-    cursor.execute("""
-        IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Users]') AND type in (N'U'))
-        BEGIN
-            CREATE TABLE Users (
-                UserID INT PRIMARY KEY IDENTITY(1,1),
-                Username NVARCHAR(50) UNIQUE NOT NULL,
-                PasswordHash VARBINARY(MAX) NOT NULL,
-                CreatedAt DATETIME DEFAULT GETDATE()
-            )
-        END
-    """)
-    
-    cursor.execute("""
-        IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Teams]') AND type in (N'U'))
-        BEGIN
-            CREATE TABLE Teams (
-                TeamID INT PRIMARY KEY IDENTITY(1,1),
-                UserID INT FOREIGN KEY REFERENCES Users(UserID) ON DELETE CASCADE,
-                TeamName NVARCHAR(100),
-                Generation NVARCHAR(50),
-                CreatedAt DATETIME DEFAULT GETDATE()
-            )
-        END
-    """)
-
-    cursor.execute("""
-        IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[TeamMembers]') AND type in (N'U'))
-        BEGIN
-            CREATE TABLE TeamMembers (
-                MemberID INT PRIMARY KEY IDENTITY(1,1),
-                TeamID INT FOREIGN KEY REFERENCES Teams(TeamID) ON DELETE CASCADE,
-                PokeApiID INT NOT NULL,
-                SlotNumber INT CHECK (SlotNumber BETWEEN 1 AND 6)
-            )
-        END
-    """)
-    # Commit the changes to the database and close the cursor
-    conn.commit()
-    cursor.close()
+            # Create TeamMembers table
+            connection.execute(text("""
+                IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[TeamMembers]') AND type in (N'U'))
+                BEGIN
+                    CREATE TABLE TeamMembers (
+                        MemberID INT PRIMARY KEY IDENTITY(1,1),
+                        TeamID INT FOREIGN KEY REFERENCES Teams(TeamID) ON DELETE CASCADE,
+                        PokeApiID INT NOT NULL,
+                        SlotNumber INT CHECK (SlotNumber BETWEEN 1 AND 6)
+                    )
+                END
+            """))
+            
+            # Explicitly commit the transaction
+            connection.commit()
+            print("🚀 Database schema initialized successfully in Azure SQL!")
+            
+    except Exception as e:
+        print(f"❌ Failed to initialize schema: {e}")
 
 class PokemonRepository:
     # This class will handle all database interactions related to Pokemon teams and users
@@ -97,7 +98,7 @@ class PokemonRepository:
         
     # Method to add a new user to the database
     def add_user(self, username, password_hash):
-        cursor = self.conn.cursor()
+        
         # We attempt to insert a new user into the Users table. If the username already exists or there's any other issue, we catch the exception, print an error message, and roll back the transaction to maintain database integrity. Finally, we ensure that the cursor is closed after the operation.
         try:
             cursor.execute("INSERT INTO Users (Username, PasswordHash) VALUES (?, ?)", (username, password_hash))
@@ -108,7 +109,7 @@ class PokemonRepository:
             self.conn.rollback()
             return False
         finally:
-            cursor.close()
+            
 
      # Method to retrieve a user by their username (for authentication purposes)
     def get_user_by_username(self, username):
